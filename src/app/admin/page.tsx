@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {createClient,SupabaseClient} from '@supabase/supabase-js';
 type Business={id:string;name:string;business_type:string;phone:string|null;email:string|null;status:string;created_at:string};
 type Sub={id:string;business_id:string;monthly_fee:number;status:string;due_date:string|null;paid_until:string|null;businesses?:{name:string}};
-function client(){const u=process.env.NEXT_PUBLIC_SUPABASE_URL,k=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return u&&k?createClient(u,k):null}
+function client(){const u=process.env.NEXT_PUBLIC_SUPABASE_URL,k=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return u&&k?createClient(u,k,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'digibiashara-auth'}}):null}
 const money=(v:number)=>new Intl.NumberFormat('en-KE',{style:'currency',currency:'KES',maximumFractionDigits:0}).format(Number(v||0));
 export default function AdminPage(){
  const [db,setDb]=useState<SupabaseClient|null>(null),[ready,setReady]=useState(false),[allowed,setAllowed]=useState(false),[email,setEmail]=useState(''),[section,setSection]=useState('overview'),[businesses,setBusinesses]=useState<Business[]>([]),[subs,setSubs]=useState<Sub[]>([]),[plans,setPlans]=useState<any[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[saving,setSaving]=useState(false);

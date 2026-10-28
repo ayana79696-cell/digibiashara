@@ -245,3 +245,7 @@ footer.admin-footer{border-color:#f0e4e8}
  .admin-main{padding-left:9px;padding-right:9px}
  .metric strong{font-size:20px}
 }
+
+.login-brand{display:flex;justify-content:center;align-items:center;margin:-5px auto 10px;max-width:220px}
+.login-brand img{display:block;width:100%;height:auto;max-height:160px;object-fit:contain}
+@media(max-width:760px){.login-brand{max-width:190px}.login-brand img{max-height:140px}}

@@ -9,6 +9,9 @@ on:
       - 'package.json'
       - 'public/digibiashara-logo.svg'
       - 'android-shell/**'
+      - 'src/app/login/page.tsx'
+      - 'scripts/prepare-android-icons.mjs'
+      - 'public/digibiashara-app-icon.svg'
       - '.github/workflows/android-apk.yml'
 
 permissions:
@@ -30,6 +33,8 @@ jobs:
         run: npm install @capacitor/android@^7.4.3
       - name: Generate Android project
         run: npx cap add android
+      - name: Generate official launcher icons
+        run: node scripts/prepare-android-icons.mjs
       - name: Sync branded app
         run: npx cap sync android
       - name: Set up Java

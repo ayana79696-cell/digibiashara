@@ -8,6 +8,9 @@ DigiBiashara is a Kenyan multi-business management platform by Digital Kingdom S
 - Role-based route selection for platform administrators and business members.
 - Platform admin console for business registration, business account status, subscription status, payment recording, and subscription plan creation.
 - Business inventory workspace for product setup, opening stock, stock valuation, and low-stock alerts.
+- Atomic stock adjustments and movement history for purchases received, returns, damage, transfers, and manual corrections.
+- Customer directory with searchable contact records.
+- Expense recording with categories, payment methods, references, and current-month summaries.
 - Sales checkout using an atomic database function: validates permissions and available stock, records sale lines/payments, reduces inventory, creates stock movements, and returns a receipt number.
 - Printable 80 mm thermal receipt layout.
 - Tenant and subscription gates enforced in PostgreSQL row-level security helper functions.
@@ -31,6 +34,6 @@ The admin console requires an existing Supabase Auth user to be explicitly liste
 
 ## Important remaining work
 
-This is an active implementation, not yet a fully production-complete ERP or published Android APK. Before commercial onboarding, finish and test staff invitations and customizable staff permissions, customer and supplier workflows, purchase/expense tracking, full financial reports, payment reconciliation, audit review, automated database backup/restore, and end-to-end tenant-isolation tests. M-Pesa is currently a manual payment method; automatic Daraja/STK or statement reconciliation needs credentials and webhook configuration. Android packaging and Play Store release are not complete.
+This is an active implementation, not yet a fully production-complete ERP or published Android APK. Before commercial onboarding, finish and test staff invitations and customizable staff permissions, supplier/purchase-order workflows, full financial and profit reports, customer payment/debt ledgers, M-Pesa Daraja integration and reconciliation, audit review, automated database backup/restore, and end-to-end tenant-isolation tests. M-Pesa is currently a manual payment method; automatic Daraja/STK or statement reconciliation needs credentials and webhook configuration. Android packaging and Play Store release are not complete.
 
 Never expose a Supabase service-role key in a browser bundle or public repository. Test with non-production data before using real business accounts.

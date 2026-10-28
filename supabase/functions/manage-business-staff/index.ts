@@ -55,6 +55,19 @@ Deno.serve(async (req) => {
     if (insertError) return json({ error: "Invitation sent, but the membership could not be saved. Contact support before sending another invitation." }, 500);
     return json({ message: "Invitation sent to " + email + ". They must accept the email invitation and set a password.", user_id: invitation.user.id });
   }
+  if (action === "list") {
+    const { data: team, error: teamError } = await admin.from("business_memberships")
+      .select("user_id,role,permissions,is_active").eq("business_id", ownerMembership.business_id).order("role");
+    if (teamError) return json({ error: "Could not load staff list." }, 500);
+    const { data: authUsers, error: usersError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (usersError) return json({ error: "Could not load staff contact details." }, 500);
+    const byId = new Map((authUsers.users || []).map((u: any) => [u.id, u]));
+    const rows = (team || []).map((m: any) => {
+      const u: any = byId.get(m.user_id);
+      return { ...m, email: u?.email || "", full_name: u?.user_metadata?.full_name || u?.user_metadata?.name || "" };
+    });
+    return json({ staff: rows });
+  }
   const target = String(body.user_id || "");
   if (!target || target === auth.user.id) return json({ error: "Select another staff account." }, 400);
   const { data: targetMembership, error: targetError } = await admin.from("business_memberships").select("user_id,role").eq("business_id", ownerMembership.business_id).eq("user_id", target).maybeSingle();

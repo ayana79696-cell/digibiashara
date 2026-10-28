@@ -10,6 +10,7 @@ on:
       - 'public/digibiashara-logo.svg'
       - 'android-shell/**'
       - 'src/app/login/page.tsx'
+      - 'src/app/globals.css'
       - 'scripts/prepare-android-icons.mjs'
       - 'public/digibiashara-app-icon.svg'
       - '.github/workflows/android-apk.yml'

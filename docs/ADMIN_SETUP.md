@@ -16,7 +16,7 @@ on conflict (user_id) do nothing;
 ```
 
 5. Confirm the statement inserted one row, then sign in at the DigiBiashara website. The sign-in page should route this account to `/admin`.
-6. Create subscription plans if needed. Register each business as pending, then create/invite its owner through the secure invitation workflow once that feature is enabled. Do not mark a business active until its account and subscription are properly set up.
+6. Create subscription plans if needed. Register each business as pending. The admin console now sends an owner invitation or links an existing Auth account to the business. Do not mark a business active until its account and subscription are properly set up.
 
 ## Subscription access rule
 

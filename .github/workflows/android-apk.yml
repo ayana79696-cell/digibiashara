@@ -11,6 +11,8 @@ on:
       - 'android-shell/**'
       - 'src/app/login/page.tsx'
       - 'src/app/globals.css'
+      - 'src/app/page.tsx'
+      - 'public/digibiashara-hero.svg'
       - 'scripts/prepare-android-icons.mjs'
       - 'public/digibiashara-app-icon.svg'
       - '.github/workflows/android-apk.yml'

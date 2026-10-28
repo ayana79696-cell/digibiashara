@@ -1,0 +1,10 @@
+{
+  "name": "DigiBiashara Business Management",
+  "short_name": "DigiBiashara",
+  "description": "Your Business. Under Control.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#711b32",
+  "orientation": "portrait-primary"
+}

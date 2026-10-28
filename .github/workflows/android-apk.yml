@@ -8,6 +8,7 @@ on:
       - 'capacitor.config.ts'
       - 'package.json'
       - 'public/digibiashara-logo.svg'
+      - 'android-shell/**'
       - '.github/workflows/android-apk.yml'
 
 permissions:

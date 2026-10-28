@@ -2,9 +2,20 @@
 import {useState} from 'react';
 import Link from 'next/link';
 import {createClient} from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 
 const APP_URL='https://digibiashara-tau.vercel.app';
-function client(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return url&&key?createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null}
+function client(){
+ const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+ if(!url||!key)return null;
+ const storage=Capacitor.isNativePlatform()?{
+  getItem:async(k:string)=>{const native=await Preferences.get({key:k});if(native.value!==null)return native.value;try{return window.localStorage.getItem(k)}catch{return null}},
+  setItem:async(k:string,v:string)=>{await Preferences.set({key:k,value:v});try{window.localStorage.setItem(k,v)}catch{}},
+  removeItem:async(k:string)=>{await Preferences.remove({key:k});try{window.localStorage.removeItem(k)}catch{}}
+ }:undefined;
+ return createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,...(storage?{storage}: {})}});
+}
 
 export default function Login(){
  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[mode,setMode]=useState<'login'|'reset'>('login');

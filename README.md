@@ -31,6 +31,6 @@ The admin console requires an existing Supabase Auth user to be explicitly liste
 
 ## Important remaining work
 
-This is an active implementation, not yet a fully production-complete ERP or published Android APK. Before commercial onboarding, finish and test secure owner/staff invitations, staff permissions management, customer and supplier workflows, purchase/expense tracking, full financial reports, subscription payment reconciliation, audit review, automated database backup/restore, and end-to-end tenant-isolation tests. M-Pesa is currently a manual payment method; automatic Daraja/STK or statement reconciliation needs credentials and webhook configuration. Android packaging and Play Store release are not complete.
+This is an active implementation, not yet a fully production-complete ERP or published Android APK. Before commercial onboarding, finish and test staff invitations and customizable staff permissions, customer and supplier workflows, purchase/expense tracking, full financial reports, payment reconciliation, audit review, automated database backup/restore, and end-to-end tenant-isolation tests. M-Pesa is currently a manual payment method; automatic Daraja/STK or statement reconciliation needs credentials and webhook configuration. Android packaging and Play Store release are not complete.
 
 Never expose a Supabase service-role key in a browser bundle or public repository. Test with non-production data before using real business accounts.

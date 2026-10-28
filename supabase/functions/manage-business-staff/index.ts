@@ -1,0 +1,76 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const allowedRoles = new Set(["manager", "cashier", "stock_manager", "accountant", "custom"]);
+const allowedModules = new Set(["sales", "inventory", "finance", "customers", "reports", "purchases", "staff"]);
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method !== "POST") return json({ error: "POST required." }, 405);
+  const url = Deno.env.get("SUPABASE_URL");
+  const anon = Deno.env.get("SUPABASE_ANON_KEY");
+  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const authHeader = req.headers.get("Authorization");
+  if (!url || !anon || !service || !authHeader) return json({ error: "Staff service is not configured." }, 500);
+  const callerClient = createClient(url, anon, { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } });
+  const { data: auth, error: authError } = await callerClient.auth.getUser();
+  if (authError || !auth.user) return json({ error: "Sign in again to manage staff." }, 401);
+  const admin = createClient(url, service, { auth: { persistSession: false } });
+  const { data: memberships, error: membershipError } = await admin.from("business_memberships")
+    .select("business_id,role,is_active").eq("user_id", auth.user.id).eq("is_active", true).limit(1);
+  if (membershipError) return json({ error: "Could not verify business permissions." }, 500);
+  const ownerMembership = memberships?.[0];
+  if (!ownerMembership || !["owner", "business_owner", "admin"].includes(String(ownerMembership.role).toLowerCase())) {
+    return json({ error: "Only the business owner or business administrator can manage staff." }, 403);
+  }
+  const { data: business, error: businessError } = await admin.from("businesses").select("id,status").eq("id", ownerMembership.business_id).maybeSingle();
+  const { data: subscription, error: subError } = await admin.from("business_subscriptions").select("status,paid_until").eq("business_id", ownerMembership.business_id).maybeSingle();
+  if (businessError || subError) return json({ error: "Could not verify subscription access." }, 500);
+  const today = new Date().toISOString().slice(0, 10);
+  if (!business || business.status !== "active" || subscription?.status !== "paid" || !subscription.paid_until || subscription.paid_until < today) {
+    return json({ error: "Staff management is locked until the business subscription is paid and active." }, 403);
+  }
+  let body: any;
+  try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const action = String(body.action || "");
+  const permissions = body.permissions && typeof body.permissions === "object"
+    ? Object.fromEntries(Object.entries(body.permissions).filter(([k, v]) => allowedModules.has(k) && typeof v === "boolean"))
+    : {};
+  if (action === "invite") {
+    const email = String(body.email || "").trim().toLowerCase();
+    const fullName = String(body.full_name || "").trim();
+    const role = String(body.role || "cashier");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !fullName) return json({ error: "Enter a valid worker name and email." }, 400);
+    if (!allowedRoles.has(role)) return json({ error: "Select a valid staff role." }, 400);
+    const { data: invitation, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id } });
+    if (inviteError || !invitation.user) return json({ error: inviteError?.message || "Invitation could not be sent." }, 400);
+    const { error: insertError } = await admin.from("business_memberships").upsert({
+      business_id: ownerMembership.business_id, user_id: invitation.user.id, role, permissions, is_active: true,
+    }, { onConflict: "business_id,user_id" });
+    if (insertError) return json({ error: "Invitation sent, but the membership could not be saved. Contact support before sending another invitation." }, 500);
+    return json({ message: "Invitation sent to " + email + ". They must accept the email invitation and set a password.", user_id: invitation.user.id });
+  }
+  const target = String(body.user_id || "");
+  if (!target || target === auth.user.id) return json({ error: "Select another staff account." }, 400);
+  const { data: targetMembership, error: targetError } = await admin.from("business_memberships").select("user_id,role").eq("business_id", ownerMembership.business_id).eq("user_id", target).maybeSingle();
+  if (targetError || !targetMembership) return json({ error: "That user is not a member of this business." }, 404);
+  if (["owner", "business_owner"].includes(String(targetMembership.role).toLowerCase())) return json({ error: "The business owner account cannot be changed here." }, 403);
+  if (action === "update") {
+    const role = String(body.role || "custom");
+    if (!allowedRoles.has(role)) return json({ error: "Select a valid staff role." }, 400);
+    const { error } = await admin.from("business_memberships").update({ role, permissions, is_active: true }).eq("business_id", ownerMembership.business_id).eq("user_id", target);
+    if (error) return json({ error: "Could not update permissions: " + error.message }, 400);
+    return json({ message: "Staff permissions updated." });
+  }
+  if (action === "deactivate") {
+    const { error } = await admin.from("business_memberships").update({ is_active: false }).eq("business_id", ownerMembership.business_id).eq("user_id", target);
+    if (error) return json({ error: "Could not deactivate staff account: " + error.message }, 400);
+    return json({ message: "Staff access deactivated. Historical records are preserved." });
+  }
+  return json({ error: "Unknown staff action." }, 400);
+});

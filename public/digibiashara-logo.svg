@@ -1,7 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
-<defs><linearGradient id="g" x1="8" y1="6" x2="88" y2="92" gradientUnits="userSpaceOnUse"><stop stop-color="#4338CA"/><stop offset=".55" stop-color="#6D28D9"/><stop offset="1" stop-color="#A78BFA"/></linearGradient><linearGradient id="shine" x1="24" y1="16" x2="72" y2="80" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#E9D5FF"/></linearGradient></defs>
-<rect x="3" y="3" width="90" height="90" rx="26" fill="url(#g)"/>
-<path d="M27 24h23c15 0 25 10 25 24S65 72 50 72H27V24Zm15 13v22h8c7 0 11-4 11-11s-4-11-11-11h-8Z" fill="url(#shine)"/>
-<path d="M18 78 34 62l10 8 21-25 13 13" stroke="#C4B5FD" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="78" cy="58" r="4" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+<defs><linearGradient id="maroon" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8f002e"/><stop offset="1" stop-color="#4c001a"/></linearGradient><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffc629"/><stop offset="1" stop-color="#e99a00"/></linearGradient></defs>
+<rect width="600" height="600" rx="20" fill="#fff"/>
+<g transform="translate(140 34) scale(.66)">
+<path d="M20 0h340c168 0 260 106 260 248S528 498 360 498H20V0Zm120 95v308h218c92 0 144-58 144-155S450 95 358 95H140Z" fill="url(#maroon)"/>
+<path d="M140 95h218c92 0 144 58 144 155s-52 153-144 153H20l120-93V95Z" fill="url(#gold)"/>
+<path d="M140 95h218c92 0 144 58 144 155s-52 153-144 153H140V95Z" fill="#fff"/>
+<path d="M166 122h171c56 0 88 31 88 76 0 37-23 63-62 73l-45 12h-72v-28h69c30 0 47-13 47-37 0-25-17-39-48-39H166v-57Z" fill="url(#gold)"/>
+<path d="M155 241h24c13 0 20 8 24 22l18 63h141c18 0 28-7 36-20l19-33 35-59 29-17-7 59-20-9-34 56c-20 34-37 49-70 49H203l-30-88h-18c-12 0-19-7-19-18s7-18 19-18Z" fill="url(#maroon)"/>
+<circle cx="222" cy="366" r="17" fill="url(#maroon)"/><circle cx="298" cy="366" r="17" fill="url(#maroon)"/>
+<path d="M274 311c70-20 124-73 166-151l-35-1 79-45-3 91-15-26c-45 79-101 126-183 145l-9-13Z" fill="url(#gold)"/>
+</g>
+<text x="300" y="455" text-anchor="middle" font-family="Arial,sans-serif" font-size="72" font-weight="800" letter-spacing="-4"><tspan fill="#8f002e">Digi</tspan><tspan fill="#e9a000">Biashara</tspan></text>
+<path d="M52 496h78M470 496h78" stroke="#e9a000" stroke-width="3"/>
+<text x="300" y="505" text-anchor="middle" font-family="Arial,sans-serif" font-size="19" letter-spacing="6" fill="#202833">Grow Your Business</text>
 </svg>

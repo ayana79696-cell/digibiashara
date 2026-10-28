@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -14,7 +16,8 @@
     "lucide-react": "^0.468.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "@capacitor/core": "^7.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -22,6 +25,7 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.5.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "@capacitor/cli": "^7.4.3"
   }
 }

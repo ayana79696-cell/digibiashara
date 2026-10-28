@@ -154,3 +154,22 @@ footer.admin-footer{border-top:1px solid #e9eaf4;color:#9296ae;margin-top:30px}
  .metric strong{font-size:21px}
  .welcome-band h2{font-size:25px}
 }
+
+
+/* DigiBiashara brand mark: shared wordmark for landing, login and workspaces */
+.logo{
+ display:inline-flex;align-items:center;gap:9px;
+ font:800 22px Manrope,sans-serif;letter-spacing:-.8px;color:#28236f;
+}
+.logo:before{
+ content:"";display:inline-block;flex:0 0 34px;width:34px;height:34px;
+ background:url('/digibiashara-logo.svg') center/contain no-repeat;
+ filter:drop-shadow(0 3px 5px #4338ca20);
+}
+.admin-side .logo{font-size:21px;gap:9px;padding-bottom:24px}
+.admin-side .logo:before{width:36px;height:36px;flex-basis:36px}
+.nav .logo{font-size:24px}
+@media(max-width:760px){
+ .admin-side .logo{font-size:18px;padding:4px 10px 4px 2px}
+ .admin-side .logo:before{width:29px;height:29px;flex-basis:29px}
+}

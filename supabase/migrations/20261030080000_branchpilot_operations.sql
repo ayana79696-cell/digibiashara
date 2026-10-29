@@ -39,6 +39,17 @@ create table if not exists public.employees (
   constraint employees_role_check check (role in ('manager','cashier','stock_manager','accountant','custom')),
   constraint employees_branch_business_match check (business_id is not null)
 );
+do $ begin
+  if not exists(select 1 from pg_constraint where conname='sales_employee_id_fkey') then
+    alter table public.sales add constraint sales_employee_id_fkey foreign key(employee_id) references public.employees(id) on delete set null;
+  end if;
+  if not exists(select 1 from pg_constraint where conname='payments_employee_id_fkey') then
+    alter table public.payments add constraint payments_employee_id_fkey foreign key(employee_id) references public.employees(id) on delete set null;
+  end if;
+  if not exists(select 1 from pg_constraint where conname='stock_movements_employee_id_fkey') then
+    alter table public.stock_movements add constraint stock_movements_employee_id_fkey foreign key(employee_id) references public.employees(id) on delete set null;
+  end if;
+end $;
 create index if not exists employees_branch_active_idx on public.employees(business_id,branch_id,is_active);
 create index if not exists employees_user_active_idx on public.employees(user_id,is_active);
 
@@ -52,6 +63,7 @@ create table if not exists public.branch_inventory (
   updated_at timestamptz not null default now(),
   unique (business_id,branch_id,product_id)
 );
+
 create index if not exists branch_inventory_lookup_idx on public.branch_inventory(business_id,branch_id,product_id);
 
 -- Seed the existing global stock into the first branch per business to avoid duplicating it across multiple branches.
@@ -114,6 +126,21 @@ create table if not exists public.stock_transfer_items (
   received_quantity numeric(14,3) not null default 0 check (received_quantity >= 0),
   created_at timestamptz not null default now()
 );
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references public.businesses(id) on delete cascade,
+  branch_id uuid references public.branches(id) on delete set null,
+  target_user_id uuid references auth.users(id) on delete cascade,
+  severity text not null default 'info' check (severity in ('info','success','warning','critical')),
+  title text not null,
+  message text not null,
+  entity_type text,
+  entity_id text,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists notifications_business_created_idx on public.notifications(business_id,created_at desc);
 
 create table if not exists public.mpesa_transactions (
   id uuid primary key default gen_random_uuid(),
@@ -260,6 +287,20 @@ begin
       ),0),updated_at=now() where p.id=v_product.id;
       insert into public.stock_movements(business_id,branch_id,product_id,employee_id,movement_type,quantity_change,reference,notes,created_by)
       values(p_business_id,v_branch,v_product.id,v_employee_id,'sale',-v_qty,v_receipt,'Stock deducted for BranchPilot sale',v_user);
+      if exists(select 1 from public.branch_inventory bi join public.products p on p.id=bi.product_id
+        where bi.business_id=p_business_id and bi.branch_id=v_branch and bi.product_id=v_product.id
+          and bi.quantity <= coalesce(p.low_stock_threshold,0)) then
+        insert into public.notifications(business_id,branch_id,severity,title,message,entity_type,entity_id)
+        select p_business_id,v_branch,case when bi.quantity=0 then 'critical' else 'warning' end,
+          case when bi.quantity=0 then 'Product out of stock' else 'Low stock alert' end,
+          p.name||' at '||b.name||' has '||bi.quantity||' units remaining.',
+          'product',p.id::text
+        from public.branch_inventory bi join public.products p on p.id=bi.product_id
+        join public.branches b on b.id=bi.branch_id
+        where bi.business_id=p_business_id and bi.branch_id=v_branch and bi.product_id=v_product.id
+          and bi.quantity <= coalesce(p.low_stock_threshold,0)
+        limit 1;
+      end if;
     end if;
   end loop;
 
@@ -325,6 +366,9 @@ begin
     if v_late>0 then
       insert into public.audit_logs(business_id,actor_user_id,action,entity_type,entity_id,details)
       values(v_employee.business_id,v_user,'employee_late_check_in','attendance',v_attendance.id::text,jsonb_build_object('late_minutes',v_late,'branch_id',v_employee.branch_id));
+      insert into public.notifications(business_id,branch_id,severity,title,message,entity_type,entity_id)
+      values(v_employee.business_id,v_employee.branch_id,'warning','Late employee check-in',
+        v_employee.full_name||' checked in '||v_late||' minutes late.','attendance',v_attendance.id::text);
     end if;
   elsif p_action='check_out' then
     select * into v_attendance from public.attendance
@@ -426,3 +470,59 @@ create policy branchpilot_mpesa_insert on public.mpesa_transactions for insert t
 with check (recorded_by=auth.uid() and private.has_business_permission(business_id,'record_sales'));
 
 grant select on public.employees,public.branch_inventory,public.attendance,public.stock_transfers,public.stock_transfer_items,public.mpesa_transactions to authenticated;
+
+
+create or replace function public.branchpilot_transfer_stock(
+  p_from_branch_id uuid,p_to_branch_id uuid,p_product_id uuid,p_quantity numeric,p_notes text default null
+) returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  v_user uuid:=auth.uid(); v_business uuid; v_source numeric; v_dest numeric;
+  v_transfer_id uuid; v_number text:='TR-'||to_char(now() at time zone 'Africa/Nairobi','YYYYMMDD')||'-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,7));
+  v_from_name text; v_to_name text; v_product_name text;
+begin
+  if v_user is null then raise exception 'Sign in is required.'; end if;
+  select business_id,name into v_business,v_from_name from public.branches where id=p_from_branch_id and is_active=true;
+  if v_business is null then raise exception 'Source branch is unavailable.'; end if;
+  select name into v_to_name from public.branches where id=p_to_branch_id and business_id=v_business and is_active=true;
+  if v_to_name is null or p_from_branch_id=p_to_branch_id then raise exception 'Choose two different active branches in the same business.'; end if;
+  if not private.has_business_permission(v_business,'manage_stock') then raise exception 'Only authorized stock managers can transfer inventory.'; end if;
+  if p_quantity is null or p_quantity<=0 then raise exception 'Transfer quantity must be positive.'; end if;
+  select name into v_product_name from public.products where id=p_product_id and business_id=v_business and is_active=true;
+  if v_product_name is null then raise exception 'Product not found in this business.'; end if;
+  select quantity into v_source from public.branch_inventory where business_id=v_business and branch_id=p_from_branch_id and product_id=p_product_id for update;
+  if not found then raise exception 'Source branch has no inventory record for this product.'; end if;
+  if v_source<p_quantity then raise exception 'Not enough source stock. Available: %.',v_source; end if;
+
+  insert into public.stock_transfers(business_id,from_branch_id,to_branch_id,status,transfer_number,notes,created_by,received_by,received_at)
+  values(v_business,p_from_branch_id,p_to_branch_id,'received',v_number,nullif(trim(coalesce(p_notes,'')),''),v_user,v_user,now())
+  returning id into v_transfer_id;
+  insert into public.stock_transfer_items(business_id,transfer_id,product_id,quantity,received_quantity)
+  values(v_business,v_transfer_id,p_product_id,p_quantity,p_quantity);
+  update public.branch_inventory set quantity=quantity-p_quantity,updated_at=now()
+    where business_id=v_business and branch_id=p_from_branch_id and product_id=p_product_id;
+  insert into public.branch_inventory(business_id,branch_id,product_id,opening_stock,quantity)
+    values(v_business,p_to_branch_id,p_product_id,0,p_quantity)
+    on conflict (business_id,branch_id,product_id) do update
+    set quantity=public.branch_inventory.quantity+excluded.quantity,updated_at=now();
+  update public.products set quantity=(select coalesce(sum(quantity),0) from public.branch_inventory where business_id=v_business and product_id=p_product_id),updated_at=now()
+    where id=p_product_id and business_id=v_business;
+  insert into public.stock_movements(business_id,branch_id,product_id,movement_type,quantity_change,reference,notes,created_by)
+  values(v_business,p_from_branch_id,p_product_id,'transfer_out',-p_quantity,v_number,'Stock transferred to '||v_to_name,v_user),
+        (v_business,p_to_branch_id,p_product_id,'transfer_in',p_quantity,v_number,'Stock transferred from '||v_from_name,v_user);
+  insert into public.audit_logs(business_id,actor_user_id,action,entity_type,entity_id,details)
+  values(v_business,v_user,'stock_transfer_completed','stock_transfer',v_transfer_id::text,
+    jsonb_build_object('transfer_number',v_number,'from_branch_id',p_from_branch_id,'to_branch_id',p_to_branch_id,'product_id',p_product_id,'quantity',p_quantity));
+  return jsonb_build_object('id',v_transfer_id,'transfer_number',v_number,'status','received');
+end; $$;
+revoke all on function public.branchpilot_transfer_stock(uuid,uuid,uuid,numeric,text) from public, anon;
+grant execute on function public.branchpilot_transfer_stock(uuid,uuid,uuid,numeric,text) to authenticated;
+
+drop policy if exists branchpilot_notifications_select on public.notifications;
+create policy branchpilot_notifications_select on public.notifications for select to authenticated
+using (target_user_id=auth.uid() or private.has_business_permission(business_id,'view_reports'));
+drop policy if exists branchpilot_notifications_owner_update on public.notifications;
+create policy branchpilot_notifications_owner_update on public.notifications for update to authenticated
+using (private.has_business_permission(business_id,'view_reports'))
+with check (private.has_business_permission(business_id,'view_reports'));
+alter table public.notifications enable row level security;
+grant select,update on public.notifications to authenticated;

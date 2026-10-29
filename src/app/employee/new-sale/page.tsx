@@ -33,14 +33,14 @@ export default function BranchPilotNewSale(){
    if(!member){setError('This account is not linked to an active business.');setLoading(false);return;}
    const isOwner=['owner','business_owner','admin'].includes(String(member.role).toLowerCase());
    if(!isOwner&&(!emp||ee)){setError('This employee has no active branch assignment. Ask the owner to assign a branch.');setLoading(false);return;}
-   if(!isOwner&&emp.business_id!==member.business_id){setError('Employee branch assignment and active business do not match.');setLoading(false);return;}
+   if(!isOwner&&emp&&emp.business_id!==member.business_id){setError('Employee branch assignment and active business do not match.');setLoading(false);return;}
    const {data:b,error:be}=await d.from('businesses').select('id,name').eq('id',member.business_id).maybeSingle();
    if(be||!b){setError('Business details could not be loaded.');setLoading(false);return;}
    setBusiness(b);setEmployee(isOwner?null:emp);localStorage.setItem('digibiashara_active_business_id',b.id);
    const {data:br,error:bre}=await d.from('branches').select('id,name,is_active').eq('business_id',b.id).eq('is_active',true).order('name');
    if(bre){setError(bre.message);setLoading(false);return;}
    setBranches(br||[]);
-   const chosen=!isOwner?emp.branch_id:((br||[]).find((x:any)=>x.id===bizId)?.id||(br||[])[0]?.id||'');
+   const chosen=(!isOwner&&emp)?emp.branch_id:((br||[]).find((x:any)=>x.id===bizId)?.id||(br||[])[0]?.id||'');
    setBranchId(chosen);if(chosen)await loadProducts(d,b.id,chosen);
    setLoading(false);
   }).catch((e:any)=>{setError(e?.message||'Could not verify this account.');setLoading(false);});
@@ -82,7 +82,7 @@ export default function BranchPilotNewSale(){
     <section className="bp-panel"><div className="bp-panel-heading"><div><h2>Choose products</h2><p>Available stock is specific to the selected branch.</p></div><span className="bp-pill">{rows.length} products</span></div>
      {!employee&&<label style={{display:'grid',gap:6,fontSize:10,fontWeight:800,color:'#617168',marginBottom:12}}>Sale branch<select className="bp-field" value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Choose branch</option>{branches.map((b:any)=><option value={b.id} key={b.id}>{b.name}</option>)}</select></label>}
      <input className="bp-field" style={{width:'100%',marginBottom:13}} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search product, SKU, barcode or category"/>
-     <div className="bp-grid" style={{gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))'}}>{rows.map((p:any)=><button type="button" key={p.id} className="bp-action-tile" disabled={p.available<=0&&p.unit!=='service'} onClick={()=>add(p.id)} style={{alignItems:'flex-start',textAlign:'left',cursor:'pointer',opacity:p.available<=0&&p.unit!=='service'?.55:1}}><span className="tile-icon">＋</span><span style={{flex:1}}><b>{p.name}</b><small>{p.category||'Retail item'} {p.size?'· '+p.size:''} {p.color?'· '+p.color:''}</small><strong style={{display:'block',marginTop:7,fontSize:12}}>{money(p.selling_price)}</strong><small>{p.unit==='service'?'Service':String(p.available)+' available'}</small></span></button>)}</div>
+     <div className="bp-grid" style={{gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))'}}>{rows.map((p:any)=><button type="button" key={p.id} className="bp-action-tile" disabled={p.available<=0&&p.unit!=='service'} onClick={()=>add(p.id)} style={{alignItems:'flex-start',textAlign:'left',cursor:'pointer',opacity:(p.available<=0&&p.unit!=='service')?0.55:1}}><span className="tile-icon">＋</span><span style={{flex:1}}><b>{p.name}</b><small>{p.category||'Retail item'} {p.size?'· '+p.size:''} {p.color?'· '+p.color:''}</small><strong style={{display:'block',marginTop:7,fontSize:12}}>{money(p.selling_price)}</strong><small>{p.unit==='service'?'Service':String(p.available)+' available'}</small></span></button>)}</div>
      {!rows.length&&<div className="bp-empty">No products found. The owner must create products and set opening stock for this branch.</div>}
     </section>
     <form className="bp-panel" onSubmit={submit}><div className="bp-panel-heading"><div><h2>Current sale</h2><p>{cartItems.length} line items · {branches.find((b:any)=>b.id===branchId)?.name||'No branch selected'}</p></div></div>

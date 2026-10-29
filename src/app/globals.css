@@ -323,7 +323,7 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
 .admin-side .side-link{min-width:0;overflow-wrap:anywhere}
 .table-wrap{max-width:100%}
 .db-welcome{position:relative;isolation:isolate;min-height:100svh;width:100%;overflow:hidden;background:#3a101d;display:flex;align-items:center;justify-content:center}
-.db-welcome-photo{position:absolute;inset:0;z-index:-3;background-image:url('/digibiashara-hero.svg');background-size:cover;background-position:center 42%;background-repeat:no-repeat;transform:scale(1.015)}
+.db-welcome-photo{position:absolute;inset:0;z-index:-3;background-image:url('https://res.cloudinary.com/perlgcll/image/upload/f_auto,q_auto,w_1920,c_fill,g_auto/v1793270947/Digibiashara__Grow_Your_Business.png');background-size:cover;background-position:center 42%;background-repeat:no-repeat;transform:scale(1.015)}
 .db-welcome-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(37,0,14,.35) 0%,rgba(37,0,14,.05) 36%,rgba(37,0,14,.4) 100%),linear-gradient(90deg,rgba(37,0,14,.14),transparent 65%)}
 .db-welcome-brand{position:absolute;top:clamp(20px,4vh,42px);left:50%;transform:translateX(-50%);width:min(300px,65vw);display:flex;justify-content:center;align-items:center}
 .db-welcome-brand a{display:block;width:100%;filter:drop-shadow(0 3px 12px #25000e35)}

@@ -575,3 +575,6 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
 @media print {
   html:has(body.print-daily-report) { width:auto!important; margin:0!important; padding:0!important; }
 }
+
+/* Business-specific catalogue suggestions */
+.starter-catalogue-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.starter-catalogue-item{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:16px;border:1px solid var(--line,#e5e7eb);border-radius:14px;background:var(--surface,#fff);color:inherit;text-align:left;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.starter-catalogue-item:hover{transform:translateY(-2px);border-color:#7c3aed;box-shadow:0 8px 22px rgba(30,20,60,.08)}.starter-catalogue-item strong{font-size:15px}.starter-catalogue-item small{color:var(--muted,#6b7280)}.starter-kind{font-size:10px;letter-spacing:.12em;font-weight:800;color:#6d28d9}.starter-add{margin-top:4px;font-size:12px;font-weight:700;color:#6d28d9}.activity-chip.selected{border-color:#7c3aed;background:#f5f3ff;color:#5b21b6}@media(max-width:600px){.starter-catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.starter-catalogue-item{padding:12px}}

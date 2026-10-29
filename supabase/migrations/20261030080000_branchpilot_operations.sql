@@ -234,7 +234,7 @@ declare
   v_employee public.employees%rowtype;
   v_branch uuid := p_branch_id;
   v_employee_id uuid;
-  v_receipt text := 'BP-' || to_char(now() at time zone 'Africa/Nairobi','YYYYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,8));
+  v_receipt text;
   v_sale_id uuid;
   v_payment_id uuid;
   v_subtotal numeric(14,2) := 0;
@@ -259,6 +259,8 @@ begin
   select * into v_membership from public.business_memberships
   where business_id=p_business_id and user_id=v_user and is_active=true limit 1;
   if not found then raise exception 'You do not have access to this business.'; end if;
+  v_receipt := coalesce((select nullif(trim(receipt_prefix),'') from public.businesses where id=p_business_id),'BP')
+    || '-' || to_char(now() at time zone 'Africa/Nairobi','YYYYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,8));
   if v_note is not null and left(ltrim(v_note),1)='{' then
     begin
       v_note_payload := v_note::jsonb;

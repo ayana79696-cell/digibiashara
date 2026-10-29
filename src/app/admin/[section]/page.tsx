@@ -109,7 +109,7 @@ export default function BranchPilotAdminSection(){
 
  async function saveEmployee(e:FormEvent){e.preventDefault();if(!db||!biz||!staffBranch)return;setBusy(true);setError('');setNotice('');const {data:{session}}=await db.auth.getSession();if(!session){fail('Sign in again before managing staff.');setBusy(false);return;}
    const payload:any={action:editingEmployee?'update':'create',business_id:biz.id,full_name:staffName.trim(),email:staffEmail.trim().toLowerCase(),phone:staffPhone.trim(),role:staffRole,branch_id:staffBranch,permissions:roleDefaults[staffRole]||roleDefaults.custom};
-   if(editingEmployee)payload.user_id=editingEmployee;else payload.password=staffPassword;
+   if(editingEmployee){payload.user_id=editingEmployee;if(staffPassword)payload.password=staffPassword;}else payload.password=staffPassword;
    const {data,error:e1}=await db.functions.invoke('manage-business-staff',{body:payload});
    if(e1||data?.error){fail(data?.error||e1?.message||'Employee account could not be saved.');setBusy(false);return;}
    notify(data?.message||(editingEmployee?'Employee updated.':'Employee login created and assigned to the selected branch.'));

@@ -35,7 +35,7 @@ export default function BranchPilotAdminSection(){
     d.from('employees').select('id,user_id,branch_id,full_name,email,phone,role,is_active,scheduled_start,scheduled_end,created_at,branches(name)').eq('business_id',businessId).order('full_name'),
     d.from('sales').select('id,receipt_number,total,subtotal,discount,amount_paid,payment_status,sale_status,sold_at,branch_id,sold_by,employee_id,branches(name),employees(full_name),payments(method,amount,status)').eq('business_id',businessId).order('sold_at',{ascending:false}).limit(500),
     d.from('mpesa_transactions').select('id,transaction_code,amount,transaction_at,branch_id,employee_id,sale_id,recorded_by,branches(name),employees(full_name),sales(receipt_number)').eq('business_id',businessId).order('transaction_at',{ascending:false}).limit(1000),
-    d.from('attendance').select('id,branch_id,employee_id,user_id,check_in_at,check_out_at,check_in_latitude,check_in_longitude,check_in_accuracy_m,check_out_latitude,check_out_longitude,check_out_accuracy_m,late_minutes,scheduled_start,employees(full_name,email),branches(name)').eq('business_id',businessId).order('check_in_at',{ascending:false}).limit(500),
+    d.from('attendance').select('id,branch_id,employee_id,user_id,check_in_at,check_out_at,check_in_latitude,check_in_longitude,check_in_accuracy_m,check_out_latitude,check_out_longitude,check_out_accuracy_m,late_minutes,scheduled_start,employees(full_name,email),branches(name,closing_time)').eq('business_id',businessId).order('check_in_at',{ascending:false}).limit(500),
     d.from('expenses').select('id,branch_id,category,description,amount,payment_method,reference,incurred_at,recorded_by,branches(name)').eq('business_id',businessId).order('incurred_at',{ascending:false}).limit(500),
     d.from('audit_logs').select('id,actor_user_id,action,entity_type,entity_id,details,created_at').eq('business_id',businessId).order('created_at',{ascending:false}).limit(300),
     d.from('notifications').select('id,branch_id,severity,title,message,entity_type,entity_id,is_read,created_at').eq('business_id',businessId).order('created_at',{ascending:false}).limit(300),
@@ -127,6 +127,15 @@ export default function BranchPilotAdminSection(){
  function exportCsv(name:string,rows:any[]){if(!rows.length){fail('There are no rows to export for the selected filters.');return;}const cols=Object.keys(rows[0]);const val=(v:any)=>{const s=String(v??'');return '"'+s.replaceAll('"','""')+'"';};const csv=[cols.map(val).join(','),...rows.map(r=>cols.map(c=>val(r[c])).join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=name+'.csv';a.click();URL.revokeObjectURL(url);}
  const printReport=()=>window.print();
  const selectedInventory=stockBranch?inventory.filter((r:any)=>r.branch_id===stockBranch):inventory;
+ const missingCheckoutRows=attendance.filter((a:any)=>{
+   if(a.check_out_at)return false;
+   const branch=branches.find((b:any)=>b.id===a.branch_id);
+   const checkDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Nairobi',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(a.check_in_at));
+   if(checkDay<today())return true;
+   if(checkDay>today()||!branch?.closing_time)return false;
+   const clock=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Nairobi',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());
+   return clock>String(branch.closing_time).slice(0,5);
+ });
 
  if(!ready)return <main className="bp-auth-page"><div className="bp-auth-card">Loading BranchPilot records…</div></main>;
  if(!biz)return <main className="bp-auth-page"><div className="bp-auth-card"><h1>Owner access check</h1><p className="bp-auth-message">{error||'Owner access is required.'}</p><Link href="/owner/login">Return to owner login</Link></div></main>;
@@ -260,8 +269,9 @@ export default function BranchPilotAdminSection(){
  {section==='notifications'&&<section className="bp-panel"><div className="bp-panel-heading"><div><h2>Business alerts</h2><p>Saved operational events and live low-stock conditions.</p></div><span className="bp-pill">{notifications.filter((n:any)=>!n.is_read).length} unread</span></div>
   <div className="bp-table-wrap"><table className="bp-table"><thead><tr><th>TIME</th><th>ALERT</th><th>BRANCH</th><th>STATUS</th></tr></thead><tbody>
    {inventory.filter((r:any)=>Number(r.quantity)<=Number(r.products?.low_stock_threshold||0)).map((r:any)=><tr key={'low-'+r.id}><td>{dateTime(r.updated_at)}</td><td><strong>{Number(r.quantity)===0?'Out of stock':'Low stock'}: {r.products?.name}</strong><br/><small>Current {r.quantity}; threshold {r.products?.low_stock_threshold}</small></td><td>{r.branches?.name}</td><td><span className="bp-status warning">Needs attention</span></td></tr>)}
+   {missingCheckoutRows.map((a:any)=><tr key={'checkout-'+a.id}><td>{dateTime(a.check_in_at)}</td><td><strong>Missing checkout: {a.employees?.full_name||'Employee'}</strong><br/><small>Open shift has passed the branch closing time or crossed into a new day.</small></td><td>{a.branches?.name||'—'}</td><td><span className="bp-status danger">Needs attention</span></td></tr>)}
    {notifications.map((n:any)=><tr key={n.id}><td>{dateTime(n.created_at)}</td><td><strong>{n.title}</strong><br/><small>{n.message}</small></td><td>{branches.find((b:any)=>b.id===n.branch_id)?.name||'Business-wide'}</td><td><span className={'bp-status '+(n.severity==='critical'?'danger':n.severity==='warning'?'warning':'')}>{n.is_read?'Read':n.severity||'Info'}</span></td></tr>)}
-  </tbody></table>{!notifications.length&&!inventory.some((r:any)=>Number(r.quantity)<=Number(r.products?.low_stock_threshold||0))&&<div className="bp-empty">No alerts yet. Alerts will appear as real stock and attendance activity is recorded.</div>}</div>
+  </tbody></table>{!notifications.length&&!missingCheckoutRows.length&&!inventory.some((r:any)=>Number(r.quantity)<=Number(r.products?.low_stock_threshold||0))&&<div className="bp-empty">No alerts yet. Alerts will appear as real stock and attendance activity is recorded.</div>}</div>
  </section>}
 
  {section==='audit-log'&&<section className="bp-panel"><div className="bp-panel-heading"><div><h2>Audit log</h2><p>Recent recorded changes, sales, stock movements and staff events.</p></div><button className="bp-button secondary" onClick={()=>exportCsv('branchpilot-audit-log',logs.map((l:any)=>({time:l.created_at,actor:l.actor_user_id,action:l.action,entity:l.entity_type,entity_id:l.entity_id,details:JSON.stringify(l.details||{})})))}>Export CSV</button></div>

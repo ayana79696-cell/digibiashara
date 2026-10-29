@@ -66,13 +66,14 @@ export default function BranchPilotLogin({ accountType }: { accountType: Account
       setMessage('No active branch assignment was found for this employee account. Ask the owner to assign your branch.');
       setBusy(false); return;
     }
-    const member = normalized.find((m: any) => m.business_id === employee.data.business_id && !['owner','business_owner','admin'].includes(m.role));
+    const employeeRow = employee.data;
+    const member = normalized.find((m: any) => m.business_id === employeeRow.business_id && !['owner','business_owner','admin'].includes(m.role));
     if (!member) {
       await db.auth.signOut();
       setMessage('This login is not authorized as an employee for the assigned business.');
       setBusy(false); return;
     }
-    localStorage.setItem('digibiashara_active_business_id', employee.data.business_id);
+    localStorage.setItem('digibiashara_active_business_id', employeeRow.business_id);
     router.push('/employee/dashboard');
   }
 

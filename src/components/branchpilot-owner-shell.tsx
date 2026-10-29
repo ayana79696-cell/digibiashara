@@ -21,8 +21,8 @@ const links = [
   ['Settings','/admin/settings','⚙'],
 ];
 
-export default function BranchPilotOwnerShell({ children, title, subtitle, businessName, email, actions }: {
-  children: ReactNode; title: string; subtitle?: string; businessName?: string; email?: string; actions?: ReactNode;
+export default function BranchPilotOwnerShell({ children, title, subtitle, businessName, businessLogo, email, actions }: {
+  children: ReactNode; title: string; subtitle?: string; businessName?: string; businessLogo?: string; email?: string; actions?: ReactNode;
 }) {
   const pathname = usePathname();
   async function signOut() {
@@ -42,7 +42,7 @@ export default function BranchPilotOwnerShell({ children, title, subtitle, busin
         <Link href="/businesses" className={pathname==='/businesses'?'active':''}><span>▣</span>Business setup & categories</Link>
         <Link href="/business" className={pathname==='/business'?'active':''}><span>⌂</span>Legacy workspace</Link>
       </nav>
-      <div className="bp-side-bottom"><span className="bp-side-avatar">BP</span><div><b>{businessName || 'Your business'}</b><small>{email || 'Owner account'}</small></div><button onClick={signOut}>Sign out</button></div>
+      <div className="bp-side-bottom"><span className="bp-side-avatar">{businessLogo?<img src={businessLogo} alt="Business logo" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:10}}/>:'BP'}</span><div><b>{businessName || 'Your business'}</b><small>{email || 'Owner account'}</small></div><button onClick={signOut}>Sign out</button></div>
     </aside>
     <section className="bp-main">
       <header className="bp-topbar"><div><div className="bp-eyebrow">BRANCHPILOT / {title.toUpperCase()}</div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div><div className="bp-topbar-actions"><span className="bp-pill">{businessName || 'Business workspace'}</span>{actions}</div></header>

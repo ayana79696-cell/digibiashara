@@ -432,3 +432,37 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
   .admin-side .side-link,
   .admin-side a.side-link { padding: 8px 9px !important; font-size: 11px !important; }
 }
+
+
+/* Business workspace navigation: keep primary navigation visible at the top on phones. */
+@media (max-width: 760px) {
+  .business-shell { display: block !important; min-width: 0; }
+  .business-shell > aside,
+  .business-shell > nav,
+  .business-shell .business-side,
+  .business-shell .workspace-sidebar,
+  .business-shell .sidebar {
+    position: sticky !important; top: 0 !important; bottom: auto !important;
+    z-index: 60 !important; width: 100% !important; max-width: 100% !important;
+    height: auto !important; max-height: none !important; min-height: 58px;
+    display: flex !important; flex-direction: row !important; align-items: center !important;
+    gap: 7px !important; overflow-x: auto !important; overflow-y: hidden !important;
+    padding: 8px 10px !important; background: #fffaf7 !important;
+    border: 0 !important; border-bottom: 1px solid #ead9de !important;
+    box-shadow: 0 5px 18px rgba(65,0,24,.08) !important;
+    white-space: nowrap !important; scrollbar-width: thin; -webkit-overflow-scrolling: touch;
+  }
+  .business-shell > aside a, .business-shell > aside button,
+  .business-shell > nav a, .business-shell > nav button,
+  .business-shell .business-side a, .business-shell .business-side button,
+  .business-shell .workspace-sidebar a, .business-shell .workspace-sidebar button,
+  .business-shell .sidebar a, .business-shell .sidebar button {
+    flex: 0 0 auto !important; width: auto !important; min-height: 40px;
+    white-space: nowrap !important; color: #572033; background-color: #fff !important;
+    border-radius: 10px; padding: 8px 11px !important; font-size: 12px !important;
+  }
+  .business-shell > main, .business-shell .business-main, .business-shell .workspace-main {
+    min-width: 0; padding: 16px 10px !important;
+  }
+  .business-shell .bottom-nav, .business-shell .mobile-bottom-nav { display: none !important; }
+}

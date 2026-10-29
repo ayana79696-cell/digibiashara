@@ -16,7 +16,7 @@ const startOfNairobiDay=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZo
 export default function BranchPilotDashboard(){
  const router=useRouter();
  const [db,setDb]=useState<any>(null),[user,setUser]=useState<any>(null),[biz,setBiz]=useState<any>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
- const [kpi,setKpi]=useState({sales:0,cash:0,mpesa:0,items:0,low:0,present:0,late:0,expenses:0});
+ const [kpi,setKpi]=useState({sales:0,cash:0,mpesa:0,profit:0,items:0,low:0,present:0,late:0,expenses:0});
  const [branches,setBranches]=useState<any[]>([]),[topProducts,setTopProducts]=useState<any[]>([]),[weekly,setWeekly]=useState<any[]>([]),[recentMpesa,setRecentMpesa]=useState<any[]>([]);
  const load=useCallback(async(d:any,businessId:string)=>{
    const start=startOfNairobiDay();
@@ -29,7 +29,7 @@ export default function BranchPilotDashboard(){
     d.from('expenses').select('amount').eq('business_id',businessId).gte('incurred_at',start),
     d.from('sales').select('id,branch_id,total,sold_at').eq('business_id',businessId).gte('sold_at',weekStart).order('sold_at',{ascending:true}),
     d.from('mpesa_transactions').select('id,transaction_code,amount,transaction_at,branch_id,sale_id,branches(name),employees(full_name),sales(receipt_number)').eq('business_id',businessId).order('transaction_at',{ascending:false}).limit(6),
-    d.from('sale_items').select('product_name,quantity,sale_id,sales!inner(business_id,sold_at)').eq('sales.business_id',businessId).gte('sales.sold_at',weekStart),
+    d.from('sale_items').select('product_name,quantity,unit_cost,sale_id,sales!inner(business_id,sold_at)').eq('sales.business_id',businessId).gte('sales.sold_at',weekStart),
    ]);
    const errs=[salesRes,branchesRes,stockRes,attendanceRes,expenseRes,weekRes,mpesaRes,itemsRes].filter(r=>r.error);
    if(errs.length) setError('Some dashboard data could not load: '+errs.map(r=>r.error.message).join(' · '));
@@ -39,10 +39,14 @@ export default function BranchPilotDashboard(){
    const stock=stockRes.data||[];
    const low=stock.filter((s:any)=>Number(s.quantity)<=Number(s.products?.low_stock_threshold||0));
    const attendance=attendanceRes.data||[];
-   setKpi({sales:daily.reduce((s:number,r:any)=>s+Number(r.total||0),0),cash:amountByMethod('cash'),mpesa:amountByMethod('mpesa'),
-    items:(itemsRes.data||[]).filter((x:any)=>new Date(x.sales?.sold_at||0)>=new Date(start)).reduce((s:number,r:any)=>s+Number(r.quantity||0),0),
+   const revenueToday=daily.reduce((s:number,r:any)=>s+Number(r.total||0),0);
+   const expensesToday=(expenseRes.data||[]).reduce((s:number,r:any)=>s+Number(r.amount||0),0);
+   const todayItems=(itemsRes.data||[]).filter((x:any)=>new Date(x.sales?.sold_at||0)>=new Date(start));
+   const cogsToday=todayItems.reduce((s:number,r:any)=>s+Number(r.unit_cost||0)*Number(r.quantity||0),0);
+   setKpi({sales:revenueToday,cash:amountByMethod('cash'),mpesa:amountByMethod('mpesa'),profit:revenueToday-cogsToday-expensesToday,
+    items:todayItems.reduce((s:number,r:any)=>s+Number(r.quantity||0),0),
     low:low.length,present:attendance.filter((r:any)=>!r.check_out_at).length,late:attendance.filter((r:any)=>Number(r.late_minutes)>0).length,
-    expenses:(expenseRes.data||[]).reduce((s:number,r:any)=>s+Number(r.amount||0),0)});
+    expenses:expensesToday});
    const bs=branchesRes.data||[];setBranches(bs.map((b:any)=>({...b,sales:daily.filter((s:any)=>s.branch_id===b.id).reduce((n:number,s:any)=>n+Number(s.total||0),0)})).sort((a:any,b:any)=>b.sales-a.sales));
    const dayMap=new Map<string,number>();
    for(const row of (weekRes.data||[])){const label=new Intl.DateTimeFormat('en-KE',{weekday:'short',timeZone:'Africa/Nairobi'}).format(new Date(row.sold_at));dayMap.set(label,(dayMap.get(label)||0)+Number(row.total||0));}
@@ -68,7 +72,7 @@ export default function BranchPilotDashboard(){
  return <BranchPilotOwnerShell title="Dashboard" subtitle="A live snapshot of sales, collections, stock and staff activity." businessName={biz.name} email={user?.email} actions={<button className="bp-button" onClick={()=>load(db,biz.id)}>↻ Refresh</button>}>
   {error&&<p className="bp-alert">{error}</p>}
   <div className="bp-grid bp-kpi-grid">
-   {[['Sales today',money(kpi.sales),'Completed sales recorded today'],['Cash collected',money(kpi.cash),'Recorded cash payments'],['M-Pesa collected',money(kpi.mpesa),'Payments with saved references'],['Items sold',kpi.items.toLocaleString('en-KE'),'Quantity from saved sale items'],['Low stock',kpi.low.toLocaleString('en-KE'),'Branch stock at or below minimum'],['Employees present',kpi.present.toLocaleString('en-KE'),'Open attendance shifts today'],['Late arrivals',kpi.late.toLocaleString('en-KE'),'Check-ins marked late'],['Expenses today',money(kpi.expenses),'Expenses recorded today']].map(([label,value,sub])=><div className="bp-panel" key={label}><div className="bp-kpi-label">{label}</div><div className="bp-kpi-value">{value}</div><div className="bp-kpi-sub">{sub}</div></div>)}
+   {[['Sales today',money(kpi.sales),'Completed sales recorded today'],['Cash collected',money(kpi.cash),'Recorded cash payments'],['M-Pesa collected',money(kpi.mpesa),'Payments with saved references'],['Items sold',kpi.items.toLocaleString('en-KE'),'Quantity from saved sale items'],['Low stock',kpi.low.toLocaleString('en-KE'),'Branch stock at or below minimum'],['Employees present',kpi.present.toLocaleString('en-KE'),'Open attendance shifts today'],['Late arrivals',kpi.late.toLocaleString('en-KE'),'Check-ins marked late'],['Estimated net profit',money(kpi.profit),'Revenue − cost of goods sold − expenses'],['Expenses today',money(kpi.expenses),'Expenses recorded today']].map(([label,value,sub])=><div className="bp-panel" key={label}><div className="bp-kpi-label">{label}</div><div className="bp-kpi-value">{value}</div><div className="bp-kpi-sub">{sub}</div></div>)}
   </div>
   <div className="bp-grid bp-two-col">
    <section className="bp-panel"><div className="bp-panel-heading"><div><h2>Sales this week</h2><p>Actual sales recorded in the database</p></div><Link href="/admin/reports" className="bp-button secondary">View reports →</Link></div>

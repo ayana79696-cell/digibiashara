@@ -54,7 +54,7 @@ export default function BranchPilotLogin({ accountType }: { accountType: Account
         setMessage('This business workspace is suspended or closed. Contact platform support.');
         setBusy(false); return;
       }
-      if (!paid && business?.status !== 'active') {
+      if (!paid) {
         router.push('/businesses'); setBusy(false); return;
       }
       router.push('/admin/dashboard'); return;
@@ -92,7 +92,7 @@ export default function BranchPilotLogin({ accountType }: { accountType: Account
         <button className="bp-auth-submit" type="submit" disabled={busy}>{busy ? 'Verifying secure access…' : owner ? 'Enter owner workspace →' : 'Enter employee workspace →'}</button>
       </form>
       {owner
-        ? <Link className="bp-auth-switch" href="/businesses">New business or business setup? Continue to business setup →</Link>
+        ? <Link className="bp-auth-switch" href="/owner/register">New to BranchPilot? Register an owner account →</Link>
         : <Link className="bp-auth-switch" href="/owner/login">Are you the business owner? Owner login →</Link>}
       <div className="bp-auth-hint">Sign-in access is verified against your saved business role and branch assignment. Your records remain in the business database.</div>
     </section>

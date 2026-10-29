@@ -338,3 +338,97 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
 .db-welcome-bottom span:first-child{width:22px;border-radius:10px;background:#f2b705}
 @media(max-width:600px){.db-welcome-photo{background-position:56% center}.db-welcome-brand{top:24px;width:min(245px,68vw)}.db-welcome-brand img{max-height:80px}.db-welcome-button{min-height:56px;font-size:16px}.admin-side{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.db-welcome-button,.db-welcome-button span,.button{transition:none}}
+
+
+/* Mobile navigation repair: keep workspace navigation at the top, visible and horizontally scrollable. */
+@media (max-width: 760px) {
+  .admin-shell, .business-shell {
+    display: block !important;
+    min-width: 0;
+  }
+  .admin-side {
+    position: sticky !important;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    height: auto !important;
+    min-height: 64px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    background: rgba(255,250,247,.98) !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid #ead9de !important;
+    box-shadow: 0 5px 18px rgba(65,0,24,.08);
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-side .logo {
+    flex: 0 0 auto;
+    display: flex !important;
+    align-items: center;
+    padding: 5px 10px 5px 2px !important;
+    margin: 0 4px 0 0 !important;
+    border-right: 1px solid #ead9de;
+    font-size: 17px !important;
+  }
+  .admin-side .side-label,
+  .admin-side .side-bottom {
+    display: none !important;
+  }
+  .admin-side .side-link,
+  .admin-side a.side-link {
+    flex: 0 0 auto;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    min-height: 40px;
+    width: auto;
+    margin: 0;
+    padding: 8px 11px !important;
+    border: 1px solid #eee2e5;
+    border-radius: 10px;
+    color: #5e3442;
+    background: #fff;
+    font-size: 12px !important;
+    line-height: 1.2;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .admin-side .side-link span {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    display: inline-grid;
+    place-items: center;
+    font-size: 15px;
+  }
+  .admin-side .side-link.selected,
+  .admin-side a.side-link.selected {
+    background: #fff0d0 !important;
+    color: #790027 !important;
+    border-color: #f2b705 !important;
+    box-shadow: inset 0 -2px #f2b705 !important;
+  }
+  .admin-main {
+    min-width: 0;
+    padding: 18px 12px !important;
+  }
+  .admin-top {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 380px) {
+  .admin-side { padding-inline: 8px !important; }
+  .admin-side .logo { font-size: 15px !important; }
+  .admin-side .side-link,
+  .admin-side a.side-link { padding: 8px 9px !important; font-size: 11px !important; }
+}

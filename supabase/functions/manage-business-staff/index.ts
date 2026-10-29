@@ -41,19 +41,32 @@ Deno.serve(async (req) => {
   const permissions = body.permissions && typeof body.permissions === "object"
     ? Object.fromEntries(Object.entries(body.permissions).filter(([k, v]) => allowedModules.has(k) && typeof v === "boolean"))
     : {};
-  if (action === "invite") {
+  if (action === "create" || action === "invite") {
     const email = String(body.email || "").trim().toLowerCase();
     const fullName = String(body.full_name || "").trim();
     const role = String(body.role || "cashier");
+    const password = String(body.password || "");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !fullName) return json({ error: "Enter a valid worker name and email." }, 400);
     if (!allowedRoles.has(role)) return json({ error: "Select a valid staff role." }, 400);
-    const { data: invitation, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id } });
-    if (inviteError || !invitation.user) return json({ error: inviteError?.message || "Invitation could not be sent." }, 400);
+    let worker: any = null;
+    if (action === "create") {
+      if (password.length < 8) return json({ error: "Initial password must be at least 8 characters." }, 400);
+      const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: fullName, created_by_owner: auth.user.id } });
+      if (error || !data.user) return json({ error: error?.message || "Staff login could not be created." }, 400);
+      worker = data.user;
+    } else {
+      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id } });
+      if (error || !data.user) return json({ error: error?.message || "Invitation could not be sent." }, 400);
+      worker = data.user;
+    }
     const { error: insertError } = await admin.from("business_memberships").upsert({
-      business_id: ownerMembership.business_id, user_id: invitation.user.id, role, permissions, is_active: true,
+      business_id: ownerMembership.business_id, user_id: worker.id, role, permissions, is_active: true,
     }, { onConflict: "business_id,user_id" });
-    if (insertError) return json({ error: "Invitation sent, but the membership could not be saved. Contact support before sending another invitation." }, 500);
-    return json({ message: "Invitation sent to " + email + ". They must accept the email invitation and set a password.", user_id: invitation.user.id });
+    if (insertError) {
+      if (action === "create") await admin.auth.admin.deleteUser(worker.id);
+      return json({ error: "Account could not be linked to this business: " + insertError.message }, 500);
+    }
+    return json({ message: action === "create" ? "Staff login created. They can sign in immediately with the email and initial password you provided." : "Invitation sent to " + email + ". They must accept the email invitation and set a password.", user_id: worker.id });
   }
   if (action === "list") {
     const { data: team, error: teamError } = await admin.from("business_memberships")

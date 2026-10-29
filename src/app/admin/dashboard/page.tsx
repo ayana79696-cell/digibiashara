@@ -61,7 +61,7 @@ export default function BranchPilotDashboard(){
    let q=d.from('business_memberships').select('business_id,role,is_active').eq('user_id',data.user.id).eq('is_active',true).in('role',['owner','business_owner','admin']);
    const chosen=typeof window!=='undefined'?localStorage.getItem('digibiashara_active_business_id'):null;if(chosen)q=q.eq('business_id',chosen);
    const {data:m,error:me}=await q.limit(1).maybeSingle();if(me||!m){setError('This area is for business owners. Employee accounts cannot open the Owner dashboard.');setLoading(false);return;}
-   const {data:b,error:be}=await d.from('businesses').select('id,name,status,phone,address').eq('id',m.business_id).maybeSingle();
+   const {data:b,error:be}=await d.from('businesses').select('id,name,status,phone,address,logo_url').eq('id',m.business_id).maybeSingle();
    if(be||!b){setError('Could not load the selected business.');setLoading(false);return;}
    setBiz(b);localStorage.setItem('digibiashara_active_business_id',b.id);
    await load(d,b.id);setLoading(false);
@@ -69,7 +69,7 @@ export default function BranchPilotDashboard(){
  },[router,load]);
  if(loading)return <main className="bp-auth-page"><div className="bp-auth-card">Loading your BranchPilot workspace…</div></main>;
  if(!biz)return <main className="bp-auth-page"><div className="bp-auth-card"><h1>Owner access check</h1><p className="bp-auth-message">{error||'Owner access is required.'}</p><p><Link href="/owner/login">Return to owner login</Link></p></div></main>;
- return <BranchPilotOwnerShell title="Dashboard" subtitle="A live snapshot of sales, collections, stock and staff activity." businessName={biz.name} email={user?.email} actions={<button className="bp-button" onClick={()=>load(db,biz.id)}>↻ Refresh</button>}>
+ return <BranchPilotOwnerShell title="Dashboard" subtitle="A live snapshot of sales, collections, stock and staff activity." businessName={biz.name} businessLogo={biz.logo_url} email={user?.email} actions={<button className="bp-button" onClick={()=>load(db,biz.id)}>↻ Refresh</button>}>
   {error&&<p className="bp-alert">{error}</p>}
   <div className="bp-grid bp-kpi-grid">
    {[['Sales today',money(kpi.sales),'Completed sales recorded today'],['Cash collected',money(kpi.cash),'Recorded cash payments'],['M-Pesa collected',money(kpi.mpesa),'Payments with saved references'],['Items sold',kpi.items.toLocaleString('en-KE'),'Quantity from saved sale items'],['Low stock',kpi.low.toLocaleString('en-KE'),'Branch stock at or below minimum'],['Employees present',kpi.present.toLocaleString('en-KE'),'Open attendance shifts today'],['Late arrivals',kpi.late.toLocaleString('en-KE'),'Check-ins marked late'],['Estimated net profit',money(kpi.profit),'Revenue − cost of goods sold − expenses'],['Expenses today',money(kpi.expenses),'Expenses recorded today']].map(([label,value,sub])=><div className="bp-panel" key={label}><div className="bp-kpi-label">{label}</div><div className="bp-kpi-value">{value}</div><div className="bp-kpi-sub">{sub}</div></div>)}

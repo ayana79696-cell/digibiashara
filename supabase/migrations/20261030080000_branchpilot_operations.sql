@@ -44,7 +44,7 @@ create table if not exists public.employees (
   constraint employees_role_check check (role in ('manager','cashier','stock_manager','accountant','custom')),
   constraint employees_branch_business_match check (business_id is not null)
 );
-do $ begin
+do $$ begin
   if not exists(select 1 from pg_constraint where conname='sales_employee_id_fkey') then
     alter table public.sales add constraint sales_employee_id_fkey foreign key(employee_id) references public.employees(id) on delete set null;
   end if;

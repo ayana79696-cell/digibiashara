@@ -110,6 +110,8 @@ Deno.serve(async (req) => {
   if (["owner", "business_owner"].includes(String(targetMembership.role).toLowerCase())) return json({ error: "The business owner account cannot be changed here." }, 403);
   if (action === "update") {
     const role = String(body.role || "custom");
+    const newPassword = String(body.password || "");
+    if (newPassword && newPassword.length < 8) return json({ error: "A new password must have at least 8 characters." }, 400);
     if (!allowedRoles.has(role)) return json({ error: "Select a valid staff role." }, 400);
     const branchId = String(body.branch_id || "");
     if (branchId) {
@@ -129,8 +131,12 @@ Deno.serve(async (req) => {
       }, { onConflict: "business_id,user_id" });
       if (employeeError) return json({ error: "Permissions changed but branch assignment failed: " + employeeError.message }, 400);
     }
-    await admin.from("audit_logs").insert({ business_id: ownerMembership.business_id, actor_user_id: auth.user.id, action: "employee_updated", entity_type: "employee", entity_id: target, details: { role, branch_id: branchId || null, permissions } });
-    return json({ message: "Staff permissions and branch assignment updated." });
+    if (newPassword) {
+      const { error: passwordError } = await admin.auth.admin.updateUserById(target, { password: newPassword });
+      if (passwordError) return json({ error: "Staff profile was updated, but the password could not be changed: " + passwordError.message }, 400);
+    }
+    await admin.from("audit_logs").insert({ business_id: ownerMembership.business_id, actor_user_id: auth.user.id, action: "employee_updated", entity_type: "employee", entity_id: target, details: { role, branch_id: branchId || null, password_changed: !!newPassword, permissions } });
+    return json({ message: newPassword ? "Staff details, access and password were updated." : "Staff permissions and branch assignment updated." });
   }
   if (action === "deactivate") {
     const { error } = await admin.from("business_memberships").update({ is_active: false }).eq("business_id", ownerMembership.business_id).eq("user_id", target);

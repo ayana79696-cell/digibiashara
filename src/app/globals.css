@@ -571,3 +571,7 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
  body.print-daily-report .empty{display:none!important}
  body.print-daily-report .notice{display:none!important}
 }
+
+@media print {
+  html:has(body.print-daily-report) { width:auto!important; margin:0!important; padding:0!important; }
+}

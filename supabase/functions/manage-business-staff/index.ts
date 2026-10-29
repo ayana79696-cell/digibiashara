@@ -67,8 +67,9 @@ Deno.serve(async (req) => {
       if (error || !data.user) return json({ error: error?.message || "Invitation could not be sent." }, 400);
       worker = data.user;
     }
+    const membershipRole = role === "stock_manager" ? "stockkeeper" : role;
     const { error: insertError } = await admin.from("business_memberships").upsert({
-      business_id: ownerMembership.business_id, user_id: worker.id, role, permissions, is_active: true,
+      business_id: ownerMembership.business_id, user_id: worker.id, role: membershipRole, permissions, is_active: true,
     }, { onConflict: "business_id,user_id" });
     if (insertError) {
       if (action === "create") await admin.auth.admin.deleteUser(worker.id);
@@ -115,7 +116,8 @@ Deno.serve(async (req) => {
       const { data: branch, error: branchError } = await admin.from("branches").select("id").eq("id", branchId).eq("business_id", ownerMembership.business_id).eq("is_active", true).maybeSingle();
       if (branchError || !branch) return json({ error: "Select an active branch belonging to this business." }, 400);
     }
-    const { error } = await admin.from("business_memberships").update({ role, permissions, is_active: true }).eq("business_id", ownerMembership.business_id).eq("user_id", target);
+    const membershipRole = role === "stock_manager" ? "stockkeeper" : role;
+    const { error } = await admin.from("business_memberships").update({ role: membershipRole, permissions, is_active: true }).eq("business_id", ownerMembership.business_id).eq("user_id", target);
     if (error) return json({ error: "Could not update permissions: " + error.message }, 400);
     if (branchId) {
       const { data: authUser } = await admin.auth.admin.getUserById(target);

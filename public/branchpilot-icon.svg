@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="BranchPilot">
+  <rect width="128" height="128" rx="32" fill="#174b39"/>
+  <path d="M38 30h27c19 0 29 9 29 25 0 10-5 17-13 21 11 3 17 11 17 23 0 18-13 29-33 29H38V30zm20 17v22h8c7 0 11-4 11-11s-4-11-12-11h-7zm0 39v24h9c8 0 12-4 12-12s-4-12-13-12h-8z" fill="#f7faf7" transform="translate(0 -9)"/>
+  <path d="M85 19l21 2-2 21-7-7-14 14-8-8 14-14z" fill="#d7f36b"/>
+</svg>

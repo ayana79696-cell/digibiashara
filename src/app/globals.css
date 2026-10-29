@@ -683,3 +683,25 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
  .bp-home-digibiashara:after{background:linear-gradient(180deg,rgba(243,246,250,.77),rgba(243,246,250,.93) 55%,#f3f6fa 100%)}
  .bp-home-digibiashara .bp-hero{min-height:unset;padding-top:50px}
 }
+
+
+/* Consistent document printing: works with the browser's Save as PDF destination. */
+@page { size: A4; margin: 12mm; }
+@media print {
+  html, body { background: #fff !important; color: #111827 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body { margin: 0 !important; }
+  .admin-side, .admin-top, .side-bottom, .nav, .bp-auth-back, .no-print,
+  button, input[type="file"], select, textarea, .admin-footer, .toast, .notification-panel { display: none !important; }
+  main, section, article, .admin-main, .business-shell, .content-card, .panel, .table-wrap {
+    width: 100% !important; max-width: none !important; min-height: 0 !important;
+    margin: 0 !important; padding: 0 !important; overflow: visible !important;
+    box-shadow: none !important; border-color: #d1d5db !important; background: #fff !important;
+  }
+  .content-card, .panel, table, tr, .receipt, .document-section { break-inside: avoid; page-break-inside: avoid; }
+  table { width: 100% !important; border-collapse: collapse !important; font-size: 9pt !important; }
+  th, td { border: 1px solid #d1d5db !important; padding: 5px !important; color: #111827 !important; }
+  a { color: #111827 !important; text-decoration: none !important; }
+  h1, h2, h3 { color: #111827 !important; break-after: avoid; }
+  .welcome-band { background: #fff !important; color: #111827 !important; border: 1px solid #d1d5db !important; }
+  .welcome-band * { color: #111827 !important; }
+}

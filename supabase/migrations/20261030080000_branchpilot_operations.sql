@@ -1,4 +1,9 @@
 -- BranchPilot operational layer. Additive migration: keeps existing DigiBiashara business setup and platform administration.
+alter table public.businesses
+  add column if not exists logo_url text,
+  add column if not exists receipt_footer text,
+  add column if not exists receipt_prefix text;
+
 alter table public.branches
   add column if not exists opening_time time,
   add column if not exists closing_time time,
@@ -544,10 +549,9 @@ using (user_id=auth.uid() or private.has_business_permission(business_id,'manage
 drop policy if exists branchpilot_attendance_employee_insert on public.attendance;
 create policy branchpilot_attendance_employee_insert on public.attendance for insert to authenticated
 with check (user_id=auth.uid() and exists(select 1 from public.employees e where e.id=attendance.employee_id and e.user_id=auth.uid() and e.branch_id=attendance.branch_id and e.business_id=attendance.business_id and e.is_active=true));
+-- Attendance is changed through the security-definer check-in/check-out function only.
+-- Employees cannot directly rewrite timestamps, location, branch or another shift field.
 drop policy if exists branchpilot_attendance_employee_update on public.attendance;
-create policy branchpilot_attendance_employee_update on public.attendance for update to authenticated
-using (user_id=auth.uid() and check_out_at is null)
-with check (user_id=auth.uid());
 
 drop policy if exists branchpilot_transfer_owner_access on public.stock_transfers;
 create policy branchpilot_transfer_owner_access on public.stock_transfers for all to authenticated

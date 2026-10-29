@@ -39,7 +39,7 @@ export function getBusinessSetup(activities: string[]) {
   const templates = [...new Set(categories.flatMap((category) => category.setup))];
   const workflows = [...new Set(categories.flatMap((category) => category.workflows))];
   const privacySensitive = categories.some((category) => category.privacySensitive);
-  return { modules: [...modules], templates, workflows, privacySensitive };
+  return { modules: [...modules], templates, workflows, privacySensitive, serviceFirst: categories.some((category) => category.serviceFirst) };
 }
 
 export function categoryForActivity(activity: string) {

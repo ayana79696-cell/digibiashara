@@ -209,6 +209,7 @@ declare
   v_stock_row public.branch_inventory%rowtype;
   v_line_total numeric(14,2);
   v_note text := p_notes;
+  v_note_payload jsonb;
   v_cash_tendered numeric(14,2);
   v_change_due numeric(14,2) := 0;
   v_count integer := 0;
@@ -221,13 +222,27 @@ begin
   if not private.has_business_permission(p_business_id,'record_sales') then
     raise exception 'You do not have permission to record sales for this business.';
   end if;
+  if v_note is not null and left(ltrim(v_note),1)='{' then
+    begin
+      v_note_payload := v_note::jsonb;
+      if jsonb_typeof(v_note_payload->'__digibiashara_payment')='object' then
+        v_cash_tendered := nullif(v_note_payload->'__digibiashara_payment'->>'cash_tendered','')::numeric;
+        v_change_due := coalesce(nullif(v_note_payload->'__digibiashara_payment'->>'change_due','')::numeric,0);
+        v_note := nullif(trim(coalesce(v_note_payload->>'note','')),'');
+      end if;
+    exception when others then
+      v_note := p_notes;
+      v_cash_tendered := null;
+      v_change_due := 0;
+    end;
+  end if;
 
   select * into v_employee from public.employees
   where business_id=p_business_id and user_id=v_user and is_active=true limit 1;
   if found then
     v_branch := v_employee.branch_id;
     v_employee_id := v_employee.id;
-  elsif lower(v_membership.role) not in ('owner','business_owner','admin','manager') then
+  elsif lower(v_membership.role) not in ('owner','business_owner','admin') then
     raise exception 'An active branch assignment is required before recording sales.';
   end if;
   if v_branch is not null and not exists (
@@ -265,6 +280,14 @@ begin
   if v_discount>v_subtotal then raise exception 'Discount cannot exceed the subtotal.'; end if;
   v_total := v_subtotal-v_discount;
   if v_paid>v_total then raise exception 'Amount paid cannot exceed the sale total.'; end if;
+  if p_payment_method='cash' then
+    if v_cash_tendered is null then v_cash_tendered:=v_paid; end if;
+    if v_cash_tendered < v_paid then raise exception 'Cash received cannot be lower than the amount applied to the sale.'; end if;
+    v_change_due:=greatest(v_cash_tendered-v_paid,0);
+  else
+    v_cash_tendered:=null;
+    v_change_due:=0;
+  end if;
   v_payment_status := case when v_paid=0 then 'unpaid' when v_paid<v_total then 'partial' else 'paid' end;
 
   insert into public.sales(business_id,branch_id,employee_id,receipt_number,sold_by,subtotal,discount,total,amount_paid,payment_status,sale_status,notes)
@@ -308,7 +331,7 @@ begin
     insert into public.payments(business_id,sale_id,branch_id,employee_id,recorded_by,amount,method,reference,status,paid_at,metadata)
     values(p_business_id,v_sale_id,v_branch,v_employee_id,v_user,v_paid,p_payment_method,
       case when p_payment_method='mpesa' then v_code else null end,'recorded',now(),
-      jsonb_build_object('receipt_number',v_receipt))
+      jsonb_build_object('receipt_number',v_receipt,'cash_tendered',v_cash_tendered,'change_due',v_change_due))
     returning id into v_payment_id;
     if p_payment_method='mpesa' then
       insert into public.mpesa_transactions(business_id,branch_id,employee_id,sale_id,payment_id,transaction_code,amount,recorded_by,transaction_at)
@@ -319,7 +342,7 @@ begin
   insert into public.audit_logs(business_id,actor_user_id,action,entity_type,entity_id,details)
   values(p_business_id,v_user,'sale_recorded','sale',v_sale_id::text,
     jsonb_build_object('receipt_number',v_receipt,'branch_id',v_branch,'employee_id',v_employee_id,'total',v_total,'amount_paid',v_paid,'payment_method',p_payment_method,'mpesa_code',v_code));
-  return jsonb_build_object('sale_id',v_sale_id,'receipt_number',v_receipt,'subtotal',v_subtotal,'discount',v_discount,'total',v_total,'amount_paid',v_paid,'payment_status',v_payment_status,'branch_id',v_branch,'employee_id',v_employee_id,'mpesa_code',v_code);
+  return jsonb_build_object('sale_id',v_sale_id,'receipt_number',v_receipt,'subtotal',v_subtotal,'discount',v_discount,'total',v_total,'amount_paid',v_paid,'payment_status',v_payment_status,'branch_id',v_branch,'employee_id',v_employee_id,'mpesa_code',v_code,'cash_tendered',v_cash_tendered,'change_due',v_change_due);
 end;
 $$;
 revoke all on function public.record_branchpilot_sale(uuid,jsonb,text,numeric,numeric,text,text,uuid) from public, anon;

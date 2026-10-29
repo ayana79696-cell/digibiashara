@@ -174,6 +174,41 @@ drop trigger if exists branchpilot_employee_branch_guard on public.employees;
 create trigger branchpilot_employee_branch_guard before insert or update of business_id,branch_id
 on public.employees for each row execute function private.branchpilot_employee_branch_guard();
 
+-- Make employees with a BranchPilot profile branch-scoped even when their job title is manager.
+-- Legacy managers without an employee profile retain the existing workspace behavior.
+create or replace function private.has_business_permission(target_business_id uuid, required_permission text)
+returns boolean
+language sql
+stable
+security definer
+set search_path to ''
+as $function$
+  select public.is_platform_admin() or exists (
+    select 1
+    from public.business_memberships bm
+    join public.businesses b on b.id = bm.business_id
+    join public.business_subscriptions s on s.business_id = b.id
+    where bm.business_id = target_business_id
+      and bm.user_id = (select auth.uid())
+      and bm.is_active = true
+      and b.status = 'active'
+      and s.status = 'paid'
+      and s.paid_until is not null
+      and s.paid_until >= current_date
+      and (
+        bm.role in ('owner','business_owner','admin')
+        or (
+          bm.role = 'manager'
+          and not exists (
+            select 1 from public.employees e
+            where e.business_id = bm.business_id and e.user_id = bm.user_id and e.is_active = true
+          )
+        )
+        or coalesce((bm.permissions ->> required_permission)::boolean, false)
+      )
+  );
+$function$;
+
 create or replace function public.record_branchpilot_sale(
   p_business_id uuid,
   p_items jsonb,
@@ -219,9 +254,6 @@ begin
   select * into v_membership from public.business_memberships
   where business_id=p_business_id and user_id=v_user and is_active=true limit 1;
   if not found then raise exception 'You do not have access to this business.'; end if;
-  if not private.has_business_permission(p_business_id,'record_sales') then
-    raise exception 'You do not have permission to record sales for this business.';
-  end if;
   if v_note is not null and left(ltrim(v_note),1)='{' then
     begin
       v_note_payload := v_note::jsonb;
@@ -240,10 +272,18 @@ begin
   select * into v_employee from public.employees
   where business_id=p_business_id and user_id=v_user and is_active=true limit 1;
   if found then
+    if not coalesce((v_membership.permissions->>'sales')::boolean,false) then
+      raise exception 'Your employee role does not permit recording sales.';
+    end if;
     v_branch := v_employee.branch_id;
     v_employee_id := v_employee.id;
-  elsif lower(v_membership.role) not in ('owner','business_owner','admin') then
-    raise exception 'An active branch assignment is required before recording sales.';
+  else
+    if lower(v_membership.role) not in ('owner','business_owner','admin') then
+      raise exception 'An active branch assignment is required before recording sales.';
+    end if;
+    if not private.has_business_permission(p_business_id,'record_sales') then
+      raise exception 'You do not have permission to record sales for this business.';
+    end if;
   end if;
   if v_branch is not null and not exists (
     select 1 from public.branches where id=v_branch and business_id=p_business_id and is_active=true
@@ -442,6 +482,42 @@ alter table public.attendance enable row level security;
 alter table public.stock_transfers enable row level security;
 alter table public.stock_transfer_items enable row level security;
 alter table public.mpesa_transactions enable row level security;
+
+-- Replace the old broad branch policy: employees can read their assigned branch but cannot manage branch records.
+drop policy if exists branches_access on public.branches;
+drop policy if exists branchpilot_branches_select on public.branches;
+create policy branchpilot_branches_select on public.branches for select to authenticated
+using (
+  private.is_platform_admin()
+  or private.has_business_permission(business_id,'manage_staff')
+  or exists(select 1 from public.employees e where e.business_id=branches.business_id and e.branch_id=branches.id and e.user_id=auth.uid() and e.is_active=true)
+);
+drop policy if exists branchpilot_branches_owner_manage on public.branches;
+create policy branchpilot_branches_owner_manage on public.branches for all to authenticated
+using (private.has_business_permission(business_id,'manage_staff'))
+with check (private.has_business_permission(business_id,'manage_staff'));
+
+drop policy if exists branchpilot_sales_employee_select on public.sales;
+create policy branchpilot_sales_employee_select on public.sales for select to authenticated
+using (exists (
+  select 1 from public.employees e
+  where e.id=sales.employee_id and e.user_id=auth.uid() and e.business_id=sales.business_id
+    and e.branch_id=sales.branch_id and e.is_active=true
+));
+drop policy if exists branchpilot_payments_employee_select on public.payments;
+create policy branchpilot_payments_employee_select on public.payments for select to authenticated
+using (exists (
+  select 1 from public.employees e
+  where e.id=payments.employee_id and e.user_id=auth.uid() and e.business_id=payments.business_id
+    and e.branch_id=payments.branch_id and e.is_active=true
+));
+drop policy if exists branchpilot_sale_items_employee_select on public.sale_items;
+create policy branchpilot_sale_items_employee_select on public.sale_items for select to authenticated
+using (exists (
+  select 1 from public.sales s join public.employees e on e.id=s.employee_id
+  where s.id=sale_items.sale_id and s.business_id=sale_items.business_id
+    and e.user_id=auth.uid() and e.business_id=s.business_id and e.branch_id=s.branch_id and e.is_active=true
+));
 
 drop policy if exists branchpilot_employees_select on public.employees;
 create policy branchpilot_employees_select on public.employees for select to authenticated

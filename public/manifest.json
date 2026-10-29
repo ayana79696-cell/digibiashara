@@ -1,15 +1,15 @@
 {
-  "name": "DigiBiashara | Grow Your Business",
-  "short_name": "DigiBiashara",
-  "description": "DigiBiashara business workspace for Kenyan entrepreneurs.",
+  "name": "BranchPilot | Retail Control Center",
+  "short_name": "BranchPilot",
+  "description": "BranchPilot multi-branch retail operations workspace for Kenyan businesses.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#8f002e",
+  "background_color": "#f7faf7",
+  "theme_color": "#174b39",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/digibiashara-logo.svg",
+      "src": "/branchpilot-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

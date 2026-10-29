@@ -9,7 +9,7 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = () => url && anon ? createClient(url, anon, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
 
-export default function BranchPilotLogin({ accountType }: { accountType: AccountType }) {
+export default function DigiBiasharaLogin({ accountType }: { accountType: AccountType }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -79,8 +79,8 @@ export default function BranchPilotLogin({ accountType }: { accountType: Account
 
   return <main className="bp-auth-page">
     <section className="bp-auth-card">
-      <Link href="/" className="bp-auth-back">← Back to BranchPilot</Link>
-      <div className="bp-auth-brand"><span className="bp-brand-mark">B<span>↗</span></span><span><strong>BranchPilot</strong><small>{owner ? 'OWNER WORKSPACE' : 'EMPLOYEE WORKSPACE'}</small></span></div>
+      <Link href="/" className="bp-auth-back">← Back to DigiBiashara</Link>
+      <div className="bp-auth-brand"><img src="/digibiashara-logo.svg" alt="DigiBiashara" /><span><strong>DigiBiashara</strong><small>{owner ? 'OWNER WORKSPACE' : 'EMPLOYEE WORKSPACE'}</small></span></div>
       <span className="bp-auth-icon">{owner ? '↗' : '▣'}</span>
       <h1>{owner ? 'Welcome back, Owner.' : 'Your shift starts here.'}</h1>
       <p>{owner ? 'Sign in to oversee branches, team activity, stock and sales from one place.' : 'Sign in to check in at your assigned branch, record sales and access your shift.'}</p>
@@ -93,7 +93,7 @@ export default function BranchPilotLogin({ accountType }: { accountType: Account
         <button className="bp-auth-submit" type="submit" disabled={busy}>{busy ? 'Verifying secure access…' : owner ? 'Enter owner workspace →' : 'Enter employee workspace →'}</button>
       </form>
       {owner
-        ? <Link className="bp-auth-switch" href="/owner/register">New to BranchPilot? Register an owner account →</Link>
+        ? <Link className="bp-auth-switch" href="/owner/register">New to DigiBiashara? Register an owner account →</Link>
         : <Link className="bp-auth-switch" href="/owner/login">Are you the business owner? Owner login →</Link>}
       <div className="bp-auth-hint">Sign-in access is verified against your saved business role and branch assignment. Your records remain in the business database.</div>
     </section>

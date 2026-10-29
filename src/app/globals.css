@@ -293,3 +293,48 @@ body{background:#fffaf6;color:#211820}
 .staff-permission{display:flex!important;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid #f5e9eb;font-size:13px}
 .staff-permission input{width:18px;height:18px;accent-color:#790027}
 @media(max-width:600px){.staff-permission-grid{grid-template-columns:1fr}.staff-permission-grid h4{grid-column:auto}}
+
+
+/* DigiBiashara premium maroon-and-gold redesign */
+:root{--maroon:#790027;--maroon2:#a20b42;--gold:#f2b705;--ink:#241b20;--muted:#756a70;--line:#eee2e5;--canvas:#fffaf7;--green:#18794e;--brand-indigo:#790027;--brand-violet:#a20b42;--brand-lavender:#f2b705;--brand-soft:#fff1d1;--brand-surface:#fffaf7;--focus-ring:#d89d00}
+body{background:#fffaf7;color:#241b20}
+.logo{color:#790027;letter-spacing:-.7px}.logo-dot{color:#f2b705}
+.button{background:#790027;color:#fff;box-shadow:0 6px 16px #7900271c;transition:transform .16s ease,box-shadow .16s ease}
+.button:hover{background:#a20b42;transform:translateY(-1px);box-shadow:0 9px 20px #79002727}
+.button.alt{background:#fff;color:#790027;border-color:#ead9de;box-shadow:none}.button.gold{background:#f2b705;color:#35200b;box-shadow:none}
+.panel,.card,.metric,.content-card,.plan-card{border-color:#eee2e5;box-shadow:0 12px 34px #4a172008}
+.eyebrow{color:#790027}.hero h1 span{background:linear-gradient(100deg,#790027,#c04a6e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.side-link:hover,.side-link.selected,.admin-side a.side-link.selected{background:#fff0d0;color:#790027}
+.side-link.selected{box-shadow:inset 3px 0 #f2b705}
+.welcome-band{background:radial-gradient(circle at 86% 15%,#f2b70535,transparent 35%),linear-gradient(120deg,#59001d,#790027 58%,#a20b42)}
+.welcome-band p:not(.eyebrow){color:#ffe8ee}.eyebrow.light{color:#ffd66c}
+.avatar{background:#fff0d0;color:#790027}
+.stat{background:linear-gradient(135deg,#fff7e7,#fff0d0)}
+th{background:#fff8f1;color:#89777e}td b{color:#241b20}
+.status.pending{background:#fff1d1;color:#8b5c00}.status.suspended,.status.overdue{background:#fce7ee;color:#9d174d}
+.actions button{color:#790027}.plan-card>strong,.product-pick strong{color:#790027}
+.receipt-brand{color:#790027}.admin-side{background:linear-gradient(180deg,#fff 0%,#fffaf7 100%)}
+input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
+:focus-visible{outline:3px solid #d89d00;outline-offset:2px}
+::selection{background:#ffe3a0;color:#4b0019}
+.admin-top h1{letter-spacing:-.7px;overflow-wrap:anywhere}
+.metric strong{letter-spacing:-.8px;line-height:1.15}
+.content-card,.metric,.plan-card{border-radius:16px}
+.admin-side .side-link{min-width:0;overflow-wrap:anywhere}
+.table-wrap{max-width:100%}
+.db-welcome{position:relative;isolation:isolate;min-height:100svh;width:100%;overflow:hidden;background:#3a101d;display:flex;align-items:center;justify-content:center}
+.db-welcome-photo{position:absolute;inset:0;z-index:-3;background-image:url('/digibiashara-hero.svg');background-size:cover;background-position:center 42%;background-repeat:no-repeat;transform:scale(1.015)}
+.db-welcome-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(37,0,14,.35) 0%,rgba(37,0,14,.05) 36%,rgba(37,0,14,.4) 100%),linear-gradient(90deg,rgba(37,0,14,.14),transparent 65%)}
+.db-welcome-brand{position:absolute;top:clamp(20px,4vh,42px);left:50%;transform:translateX(-50%);width:min(300px,65vw);display:flex;justify-content:center;align-items:center}
+.db-welcome-brand a{display:block;width:100%;filter:drop-shadow(0 3px 12px #25000e35)}
+.db-welcome-brand img{display:block;width:100%;max-height:105px;object-fit:contain}
+.db-welcome-action{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(290px,78vw);display:flex;justify-content:center}
+.db-welcome-button{display:flex;align-items:center;justify-content:center;gap:15px;width:100%;min-height:60px;padding:16px 25px;border-radius:16px;background:#f2b705;color:#35101b;font-size:18px;font-weight:800;letter-spacing:.1px;box-shadow:0 14px 40px #25000e55;border:1px solid #ffdc67;transition:transform .18s ease,box-shadow .18s ease}
+.db-welcome-button span{font-size:22px;transition:transform .18s ease}
+.db-welcome-button:hover{transform:translateY(-3px);box-shadow:0 20px 48px #25000e70}
+.db-welcome-button:hover span{transform:translateX(4px)}
+.db-welcome-bottom{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:7px;opacity:.8}
+.db-welcome-bottom span{width:6px;height:6px;border-radius:50%;background:#fff}
+.db-welcome-bottom span:first-child{width:22px;border-radius:10px;background:#f2b705}
+@media(max-width:600px){.db-welcome-photo{background-position:56% center}.db-welcome-brand{top:24px;width:min(245px,68vw)}.db-welcome-brand img{max-height:80px}.db-welcome-button{min-height:56px;font-size:16px}.admin-side{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.db-welcome-button,.db-welcome-button span,.button{transition:none}}

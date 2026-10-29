@@ -54,7 +54,7 @@ do $$ begin
   if not exists(select 1 from pg_constraint where conname='stock_movements_employee_id_fkey') then
     alter table public.stock_movements add constraint stock_movements_employee_id_fkey foreign key(employee_id) references public.employees(id) on delete set null;
   end if;
-end $;
+end $$;
 create index if not exists employees_branch_active_idx on public.employees(business_id,branch_id,is_active);
 create index if not exists employees_user_active_idx on public.employees(user_id,is_active);
 

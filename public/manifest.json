@@ -1,18 +1,11 @@
 {
-  "name": "BranchPilot | Retail Control Center",
-  "short_name": "BranchPilot",
-  "description": "BranchPilot multi-branch retail operations workspace for Kenyan businesses.",
+  "name": "DigiBiashara | Retail Management",
+  "short_name": "DigiBiashara",
+  "description": "DigiBiashara retail operations workspace for Kenyan businesses.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7faf7",
-  "theme_color": "#174b39",
+  "background_color": "#F3F6FA",
+  "theme_color": "#142B45",
   "orientation": "portrait-primary",
-  "icons": [
-    {
-      "src": "/branchpilot-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "icons": [{"src": "/digibiashara-app-icon.svg","sizes": "any","type": "image/svg+xml","purpose": "any maskable"}]
 }

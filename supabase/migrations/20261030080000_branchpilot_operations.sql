@@ -574,7 +574,8 @@ drop policy if exists branchpilot_mpesa_insert on public.mpesa_transactions;
 create policy branchpilot_mpesa_insert on public.mpesa_transactions for insert to authenticated
 with check (recorded_by=auth.uid() and private.has_business_permission(business_id,'record_sales'));
 
-grant select on public.employees,public.branch_inventory,public.attendance,public.stock_transfers,public.stock_transfer_items,public.mpesa_transactions to authenticated;
+grant select on public.employees,public.attendance,public.stock_transfers,public.stock_transfer_items,public.mpesa_transactions to authenticated;
+grant select,insert,update,delete on public.branch_inventory to authenticated;
 
 
 create or replace function public.branchpilot_transfer_stock(

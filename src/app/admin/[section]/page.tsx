@@ -80,6 +80,12 @@ export default function BranchPilotAdminSection(){
  async function toggleBranch(b:any){if(!db||!biz)return;const {error:e}=await db.from('branches').update({is_active:!b.is_active}).eq('id',b.id).eq('business_id',biz.id);if(e)fail(e.message);else{notify(b.is_active?'Branch disabled. Historical transactions remain saved.':'Branch enabled.');await refresh();}}
 
  async function saveProduct(e:FormEvent){e.preventDefault();if(!db||!biz||!user)return;setBusy(true);setError('');setNotice('');
+  if(editingProduct){
+    const {error:ue}=await db.from('products').update({name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,unit:'piece',updated_at:new Date().toISOString()}).eq('id',editingProduct).eq('business_id',biz.id);
+    if(ue){fail(ue.message);setBusy(false);return;}
+    notify('Product details updated. Existing branch stock and historical sales were left unchanged.');
+    setEditingProduct(null);setProductName('');setSku('');setBarcode('');setCategory('');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');setBusy(false);await refresh();return;
+  }
   const payload:any={business_id:biz.id,name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,unit:'piece',is_active:true,quantity:0};
   const {data:p,error:pe}=await db.from('products').insert(payload).select('id').single();if(pe||!p){fail(pe?.message||'Product could not be created.');setBusy(false);return;}
   const targets=productBranch&&productBranch!=='all'?branches.filter((b:any)=>b.id===productBranch):branches;
@@ -92,6 +98,7 @@ export default function BranchPilotAdminSection(){
   notify('Product created. Stock is stored separately by branch; no sample stock was invented.');
   setProductName('');setSku('');setBarcode('');setCategory('');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');setOpeningStock('0');setBusy(false);await refresh();
  }
+ function editProduct(p:any){setEditingProduct(p.id);setProductName(p.name||'');setSku(p.sku||'');setBarcode(p.barcode||'');setCategory(p.category||'');setCost(String(p.cost_price??0));setPrice(String(p.selling_price??0));setMinStock(String(p.low_stock_threshold??5));setSize(p.size||'');setColor(p.color||'');window.scrollTo({top:0,behavior:'smooth'});}
  async function archiveProduct(p:any){if(!db||!biz)return;if(!window.confirm('Archive '+p.name+'? Historical sales will remain available.'))return;const {error:e}=await db.from('products').update({is_active:false,archived_at:new Date().toISOString()}).eq('id',p.id).eq('business_id',biz.id);if(e)fail(e.message);else{notify('Product archived. Historical sales and movements have been retained.');await refresh();}}
 
  async function adjustStock(e:FormEvent){e.preventDefault();if(!db||!stockBranch||!stockProduct)return;setBusy(true);setError('');setNotice('');const {error:e1}=await db.rpc('branchpilot_adjust_stock',{p_branch_id:stockBranch,p_product_id:stockProduct,p_quantity_change:Number(stockChange),p_reason:stockReason.trim()});if(e1)fail(e1.message);else{notify('Stock adjustment saved and included in the stock movement/audit trail.');setStockChange('');setStockReason('');await refresh();}setBusy(false);}
@@ -143,7 +150,7 @@ export default function BranchPilotAdminSection(){
  </div>}
 
  {section==='products'&&<div className="bp-grid bp-two-col">
-  <section className="bp-panel"><div className="bp-panel-heading"><div><h2>Add product</h2><p>Prices and minimums are stored once; quantities are controlled separately for each branch.</p></div></div>
+  <section className="bp-panel"><div className="bp-panel-heading"><div><h2>{editingProduct?'Edit product':'Add product'}</h2><p>Prices and minimums are stored once; quantities are controlled separately for each branch.</p></div></div>
    <form className="bp-form-grid" onSubmit={saveProduct}>
     <label>Product name<input required value={productName} onChange={e=>setProductName(e.target.value)} placeholder="e.g. Classic trousers"/></label>
     <label>Category<input value={category} onChange={e=>setCategory(e.target.value)} placeholder="Clothing, shoes…"/></label>
@@ -152,13 +159,13 @@ export default function BranchPilotAdminSection(){
     <label>Buying price (KES)<input type="number" min="0" step="0.01" required value={cost} onChange={e=>setCost(e.target.value)}/></label>
     <label>Selling price (KES)<input type="number" min="0" step="0.01" required value={price} onChange={e=>setPrice(e.target.value)}/></label>
     <label>Low-stock threshold<input type="number" min="0" step="0.001" required value={minStock} onChange={e=>setMinStock(e.target.value)}/></label>
-    <label>Opening stock branch<select value={productBranch} onChange={e=>setProductBranch(e.target.value)}><option value="">First branch (default)</option>{branches.filter((b:any)=>b.is_active).map((b:any)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
-    <label>Opening stock quantity<input type="number" min="0" step="0.001" required value={openingStock} onChange={e=>setOpeningStock(e.target.value)}/></label>
-    <div style={{gridColumn:'1/-1'}}><button className="bp-button" disabled={busy}>{busy?'Saving…':'Save product'}</button></div>
+    {!editingProduct&&<><label>Opening stock branch<select value={productBranch} onChange={e=>setProductBranch(e.target.value)}><option value="">First branch (default)</option>{branches.filter((b:any)=>b.is_active).map((b:any)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
+    <label>Opening stock quantity<input type="number" min="0" step="0.001" required value={openingStock} onChange={e=>setOpeningStock(e.target.value)}/></label></>}
+    <div style={{gridColumn:'1/-1',display:'flex',gap:8,flexWrap:'wrap'}}><button className="bp-button" disabled={busy}>{busy?'Saving…':editingProduct?'Save product changes':'Save product'}</button>{editingProduct&&<button type="button" className="bp-button secondary" onClick={()=>{setEditingProduct(null);setProductName('');setSku('');setBarcode('');setCategory('');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');}}>Cancel edit</button>}</div>
    </form>
   </section>
   <section className="bp-panel"><div className="bp-panel-heading"><div><h2>Product catalogue</h2><p>{products.length} active products</p></div><button className="bp-button secondary" onClick={()=>exportCsv('branchpilot-products',products.map((p:any)=>({name:p.name,sku:p.sku,barcode:p.barcode,category:p.category,buying_price:p.cost_price,selling_price:p.selling_price,minimum_stock:p.low_stock_threshold}))) }>Export CSV</button></div>
-   <div className="bp-table-wrap"><table className="bp-table"><thead><tr><th>PRODUCT</th><th>BUY / SELL</th><th>MIN STOCK</th><th></th></tr></thead><tbody>{products.map((p:any)=><tr key={p.id}><td><strong>{p.name}</strong><br/><small>{p.category||'Uncategorised'} · {[p.size,p.color].filter(Boolean).join(' / ')}</small><br/><small>{p.sku||p.barcode||'No code'}</small></td><td>{money(p.cost_price)} / {money(p.selling_price)}</td><td>{p.low_stock_threshold}</td><td><button className="bp-button secondary" onClick={()=>archiveProduct(p)}>Archive</button></td></tr>)}</tbody></table></div>
+   <div className="bp-table-wrap"><table className="bp-table"><thead><tr><th>PRODUCT</th><th>BUY / SELL</th><th>MIN STOCK</th><th></th></tr></thead><tbody>{products.map((p:any)=><tr key={p.id}><td><strong>{p.name}</strong><br/><small>{p.category||'Uncategorised'} · {[p.size,p.color].filter(Boolean).join(' / ')}</small><br/><small>{p.sku||p.barcode||'No code'}</small></td><td>{money(p.cost_price)} / {money(p.selling_price)}</td><td>{p.low_stock_threshold}</td><td style={{display:'flex',gap:6}}><button className="bp-button secondary" onClick={()=>editProduct(p)}>Edit</button><button className="bp-button secondary" onClick={()=>archiveProduct(p)}>Archive</button></td></tr>)}</tbody></table></div>
   </section>
  </div>}
 

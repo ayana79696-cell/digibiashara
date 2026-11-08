@@ -63,7 +63,26 @@ Deno.serve(async (req) => {
       if (error || !data.user) return json({ error: error?.message || "Staff login could not be created." }, 400);
       worker = data.user;
     } else {
-      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id } });
+      // Send invited staff to the BranchPilot password-setup screen on the same app host.
+      // APP_URL can pin this to the canonical production URL; otherwise use the requesting app origin.
+      const configuredAppUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "";
+      let redirectTo: string | undefined;
+      try {
+        const appUrl = new URL(configuredAppUrl);
+        const isAllowedAppHost =
+          appUrl.hostname === "digibiashara-tau.vercel.app" ||
+          (appUrl.hostname.startsWith("digibiashara-") && appUrl.hostname.endsWith(".vercel.app")) ||
+          appUrl.hostname === "localhost";
+        if (isAllowedAppHost && (appUrl.protocol === "https:" || appUrl.hostname === "localhost")) {
+          redirectTo = new URL("/reset-password", appUrl.origin).toString();
+        }
+      } catch {
+        redirectTo = undefined;
+      }
+      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id },
+        ...(redirectTo ? { redirectTo } : {}),
+      });
       if (error || !data.user) return json({ error: error?.message || "Invitation could not be sent." }, 400);
       worker = data.user;
     }

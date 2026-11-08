@@ -8,6 +8,25 @@ const cors = {
 const allowedRoles = new Set(["manager", "cashier", "stock_manager", "accountant", "custom"]);
 const allowedModules = new Set(["sales", "inventory", "finance", "customers", "reports", "purchases", "staff"]);
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+function branchPilotRedirect(req: Request): string {
+  const candidates = [req.headers.get("origin") || "", Deno.env.get("APP_URL") || "", "https://digibiashara-tau.vercel.app"];
+  for (const candidate of candidates) {
+    try {
+      const appUrl = new URL(candidate);
+      const host = appUrl.hostname.toLowerCase();
+      const allowed = host === "digibiashara-tau.vercel.app" ||
+        (host.startsWith("digibiashara-") && host.endsWith(".vercel.app")) ||
+        host === "localhost" || host === "127.0.0.1";
+      if (allowed && (appUrl.protocol === "https:" || host === "localhost" || host === "127.0.0.1")) {
+        return new URL("/reset-password", appUrl.origin).toString();
+      }
+    } catch {
+      // Try the next trusted BranchPilot host.
+    }
+  }
+  return "https://digibiashara-tau.vercel.app/reset-password";
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -57,38 +76,31 @@ Deno.serve(async (req) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !fullName) return json({ error: "Enter a valid worker name and email." }, 400);
     if (!allowedRoles.has(role)) return json({ error: "Select a valid staff role." }, 400);
     let worker: any = null;
+    let existingAccount = false;
+    let passwordLinkSent = false;
+    let passwordLinkWarning = '';
     if (action === "create") {
       if (password.length < 8) return json({ error: "Initial password must be at least 8 characters." }, 400);
       const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: fullName, created_by_owner: auth.user.id } });
       if (error || !data.user) return json({ error: error?.message || "Staff login could not be created." }, 400);
       worker = data.user;
     } else {
-      // Invite links always land on BranchPilot's password-setup page.
-      const candidates = [req.headers.get("origin") || "", Deno.env.get("APP_URL") || "", "https://digibiashara-tau.vercel.app"];
-      let redirectTo = "https://digibiashara-tau.vercel.app/reset-password";
-      for (const candidate of candidates) {
-        try {
-          const appUrl = new URL(candidate);
-          const host = appUrl.hostname.toLowerCase();
-          const allowedHost =
-            host === "digibiashara-tau.vercel.app" ||
-            (host.startsWith("digibiashara-") && host.endsWith(".vercel.app")) ||
-            host === "localhost" ||
-            host === "127.0.0.1";
-          if (allowedHost && (appUrl.protocol === "https:" || host === "localhost" || host === "127.0.0.1")) {
-            redirectTo = new URL("/reset-password", appUrl.origin).toString();
-            break;
-          }
-        } catch {
-          // Try the next trusted BranchPilot host.
-        }
+      const redirectTo = branchPilotRedirect(req);
+      const { data: users, error: usersError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (usersError) return json({ error: "Could not check whether this employee already has an account." }, 500);
+      const existing = (users.users || []).find((item: any) => (item.email || "").toLowerCase() === email);
+      if (existing) {
+        worker = existing;
+        existingAccount = true;
+      } else {
+        const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+          data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id, account_type: "business_employee" },
+          redirectTo,
+        });
+        if (error || !data.user) return json({ error: error?.message || "Invitation could not be sent. Check Supabase Auth email settings and redirect URL allowlist." }, 400);
+        worker = data.user;
+        passwordLinkSent = true;
       }
-      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id, account_type: "business_employee" },
-        redirectTo,
-      });
-      if (error || !data.user) return json({ error: error?.message || "Invitation could not be sent." }, 400);
-      worker = data.user;
     }
     const membershipRole = role === "stock_manager" ? "stockkeeper" : role;
     const { error: insertError } = await admin.from("business_memberships").upsert({
@@ -110,8 +122,30 @@ Deno.serve(async (req) => {
         return json({ error: "The login was created, but its branch assignment could not be saved: " + employeeError.message }, 500);
       }
     }
-    await admin.from("audit_logs").insert({ business_id: ownerMembership.business_id, actor_user_id: auth.user.id, action: "employee_created", entity_type: "employee", entity_id: worker.id, details: { full_name: fullName, email, branch_id: branchId || null, role } });
-    return json({ message: action === "create" ? "Employee login created." : "Invitation sent to " + email + ". They must accept the email invitation and set a password.", user_id: worker.id });
+    if (action === "invite" && existingAccount) {
+      const recovery = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
+      const { error: resetError } = await recovery.auth.resetPasswordForEmail(email, {
+        redirectTo: branchPilotRedirect(req),
+      });
+      if (resetError) passwordLinkWarning = resetError.message;
+      else passwordLinkSent = true;
+    }
+    await admin.from("audit_logs").insert({
+      business_id: ownerMembership.business_id,
+      actor_user_id: auth.user.id,
+      action: "employee_created",
+      entity_type: "employee",
+      entity_id: worker.id,
+      details: { full_name: fullName, email, branch_id: branchId || null, role, invitation: action, existing_account: existingAccount, password_link_sent: passwordLinkSent },
+    });
+    const message = action === "create"
+      ? "Employee login created."
+      : existingAccount
+        ? passwordLinkSent
+          ? "Existing employee account linked. A BranchPilot password setup/recovery link was sent."
+          : "Existing employee account linked, but the password email could not be sent: " + (passwordLinkWarning || "Ask the employee to use password recovery.")
+        : "Invitation sent to " + email + " with a BranchPilot password setup link.";
+    return json({ message, user_id: worker.id, password_link_sent: passwordLinkSent, password_link_warning: passwordLinkWarning || null });
   }
   if (action === "list") {
     const { data: team, error: teamError } = await admin.from("business_memberships")

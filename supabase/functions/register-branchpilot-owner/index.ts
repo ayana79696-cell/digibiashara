@@ -62,6 +62,7 @@ Deno.serve(async (req: Request) => {
     group_id: template.group_id,
     group_label: template.group_label,
     category_label: template.category_label,
+    template_version: Number(configuration.template_version || 1),
     configuration,
     applied_at: new Date().toISOString(),
   };
@@ -102,6 +103,17 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Business workspace could not be created: " + (businessError?.message || "database error") }, 500);
   }
 
+  const { data: starterExamplesAdded, error: starterSeedError } = await admin.rpc("branchpilot_apply_category_template", {
+    p_business_id: business.id,
+  });
+  if (starterSeedError) {
+    await admin.from("businesses").delete().eq("id", business.id);
+    await admin.auth.admin.deleteUser(userId);
+    return json({
+      error: "The business account was created but its category starter catalogue could not be applied: " + starterSeedError.message,
+    }, 500);
+  }
+
   const { error: profileError } = await admin.from("profiles").upsert(
     { user_id: userId, full_name: fullName, phone: phone || null },
     { onConflict: "user_id" },
@@ -137,6 +149,7 @@ Deno.serve(async (req: Request) => {
       category_template_id: template.id,
       category_count: 1,
       registered_via: "branchpilot",
+      starter_examples_added: Number(starterExamplesAdded || 0),
     },
   });
 
@@ -144,6 +157,7 @@ Deno.serve(async (req: Request) => {
     message: "Owner account and business were created with the selected BranchPilot category template. The workspace is pending activation by the platform administrator. Use Owner login after activation.",
     business_id: business.id,
     category_template_id: template.id,
+    starter_examples_added: Number(starterExamplesAdded || 0),
     status: "pending",
   }, 201);
 });

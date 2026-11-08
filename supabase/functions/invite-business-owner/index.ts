@@ -75,6 +75,8 @@ Deno.serve(async (req: Request) => {
   if (userListError) return reply(500, { error: "Could not check whether the owner already has an account." });
   let targetUser: any = users.users.find((user) => (user.email || "").toLowerCase() === email) || null;
   let inviteSent = false;
+  let passwordLinkSent = false;
+  let passwordLinkWarning: string | null = null;
 
   if (!targetUser) {
     const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
@@ -89,6 +91,7 @@ Deno.serve(async (req: Request) => {
     }
     targetUser = invited.user;
     inviteSent = true;
+    passwordLinkSent = true;
   }
 
   const { data: existing, error: existingError } = await admin.from("business_memberships")
@@ -112,13 +115,28 @@ Deno.serve(async (req: Request) => {
     return reply(500, { error: "Business membership setup failed: " + memberError.message });
   }
 
+  if (!inviteSent) {
+    const passwordClient = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { error: resetError } = await passwordClient.auth.resetPasswordForEmail(email, {
+      redirectTo: branchPilotRedirect(req),
+    });
+    if (resetError) passwordLinkWarning = resetError.message;
+    else passwordLinkSent = true;
+  }
+
   await admin.from("audit_logs").insert({
     business_id: businessId,
     actor_user_id: authData.user.id,
     action: "business_owner_invited",
     entity_type: "business_membership",
     entity_id: targetUser.id,
-    details: { email, invite_sent: inviteSent, business_name: business.name, invitation_redirect: inviteSent ? branchPilotRedirect(req) : null },
+    details: {
+      email,
+      invite_sent: inviteSent,
+      password_link_sent: passwordLinkSent,
+      business_name: business.name,
+      invitation_redirect: passwordLinkSent ? branchPilotRedirect(req) : null,
+    },
   });
   return reply(200, {
     ok: true,
@@ -126,7 +144,13 @@ Deno.serve(async (req: Request) => {
     business_name: business.name,
     owner_email: email,
     invite_sent: inviteSent,
-    redirect_to: inviteSent ? branchPilotRedirect(req) : null,
-    message: inviteSent ? "Owner invitation email sent with the BranchPilot password setup link." : "Existing Auth account linked as business owner.",
+    password_link_sent: passwordLinkSent,
+    password_link_warning: passwordLinkWarning,
+    redirect_to: passwordLinkSent ? branchPilotRedirect(req) : null,
+    message: inviteSent
+      ? "Owner invitation email sent with the BranchPilot password setup link."
+      : passwordLinkSent
+        ? "Existing owner account linked. A fresh BranchPilot password setup/recovery link was sent."
+        : "Existing owner account linked, but the password email could not be sent: " + (passwordLinkWarning || "Please ask the owner to use password recovery."),
   });
 });

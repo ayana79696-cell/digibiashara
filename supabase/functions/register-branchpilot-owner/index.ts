@@ -103,16 +103,10 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Business workspace could not be created: " + (businessError?.message || "database error") }, 500);
   }
 
-  const { data: starterExamplesAdded, error: starterSeedError } = await admin.rpc("branchpilot_apply_category_template", {
-    p_business_id: business.id,
-  });
-  if (starterSeedError) {
-    await admin.from("businesses").delete().eq("id", business.id);
-    await admin.auth.admin.deleteUser(userId);
-    return json({
-      error: "The business account was created but its category starter catalogue could not be applied: " + starterSeedError.message,
-    }, 500);
-  }
+  // The database insert trigger has already created the starter catalogue.
+  const starterExamplesAdded = Array.isArray(configuration.product_examples)
+    ? configuration.product_examples.length
+    : 0;
 
   const { error: profileError } = await admin.from("profiles").upsert(
     { user_id: userId, full_name: fullName, phone: phone || null },

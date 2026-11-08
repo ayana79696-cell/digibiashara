@@ -818,138 +818,110 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
 }
 
 
-/* BranchPilot visual system for every owner/business workspace and invitation landing destination */
-.business-shell{
-  min-height:100vh;
-  width:100%;
-  max-width:none;
-  margin:0;
-  padding:0;
-  display:grid;
-  grid-template-columns:258px minmax(0,1fr);
-  background:#f3f7fb;
-  color:#142b45;
+/* Unified BranchPilot system: legacy routes now render with the same green/lime workspace language. */
+.business-shell,.admin-shell{
+  --bp-ink:#17221d;--bp-muted:#728078;--bp-green:#174b39;--bp-lime:#d7f36b;--bp-border:#e1e9e2;
+  min-height:100vh;width:100%;max-width:none;margin:0;padding:0;display:grid;
+  grid-template-columns:246px minmax(0,1fr);background:#f6f9f6;color:var(--bp-ink);
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
 }
-.business-shell>.admin-side{
-  position:sticky;
-  top:0;
-  height:100vh;
-  min-height:100vh;
-  background:#142b45;
-  border:0;
-  color:#fff;
-  padding:26px 18px;
-  box-shadow:8px 0 28px rgba(20,43,69,.08);
+.business-shell>.admin-side,.admin-shell>.admin-side{
+  position:sticky;top:0;height:100vh;min-height:100vh;background:#173c2d;color:#eff6ee;
+  border:0;padding:22px 14px;display:flex;flex-direction:column;box-shadow:none;overflow-y:auto;
 }
-.business-shell>.admin-side .logo{color:#fff;font-weight:900;letter-spacing:-.5px}
-.business-shell>.admin-side .logo-dot{color:#d9a441}
-.business-shell>.admin-side .side-label{color:#8fb8c5}
-.business-shell>.admin-side .side-link{
-  color:#d6e3ec;
-  border-radius:11px;
-  padding:12px 13px;
-  transition:background .18s ease,color .18s ease,transform .18s ease;
+.business-shell>.admin-side .logo,.admin-shell>.admin-side .logo{
+  display:flex;align-items:center;gap:10px;padding:4px 9px 24px;color:#fff;
+  font-weight:900;letter-spacing:-.4px;border-bottom:1px solid rgba(255,255,255,.11);text-decoration:none;
 }
-.business-shell>.admin-side .side-link:hover,
-.business-shell>.admin-side .side-link.selected{
-  background:rgba(19,140,135,.24);
-  color:#fff;
+.business-shell>.admin-side .logo-dot,.admin-shell>.admin-side .logo-dot{color:#d7f36b}
+.business-shell>.admin-side .side-label,.admin-shell>.admin-side .side-label{
+  font-size:8px;letter-spacing:1.5px;color:#7fa58a;font-weight:900;padding:22px 10px 8px;
 }
-.business-shell>.admin-side .side-link.selected{box-shadow:inset 3px 0 #d9a441}
-.business-shell>.admin-side .side-link span{color:#d9a441}
-.business-shell>.admin-side .side-bottom{border-color:rgba(255,255,255,.15);color:#fff}
-.business-shell>.admin-side .side-bottom small{color:#a9c1ce}
-.business-shell>.admin-side .side-bottom .avatar{background:#d9a441;color:#142b45}
-.business-shell>.admin-side .side-bottom .text-button{color:#f0ce86}
-.business-shell>.admin-main{
-  min-width:0;
-  width:100%;
-  max-width:none;
-  background:#f3f7fb;
-  padding:30px clamp(18px,3vw,44px);
-  color:#142b45;
+.business-shell>.admin-side .side-link,.admin-shell>.admin-side .side-link{
+  display:flex;gap:12px;align-items:center;color:#c8d9cd;border:0;border-radius:10px;
+  padding:11px 12px;background:transparent;font-size:11px;font-weight:650;text-decoration:none;
+  transition:background .12s,color .12s;cursor:pointer;
 }
-.business-shell .admin-top{border-color:#dce6ef}
-.business-shell .admin-top h1{color:#142b45}
-.business-shell .eyebrow{color:#16827e}
-.business-shell .welcome-band{
-  background:linear-gradient(120deg,#142b45 0%,#1c5268 58%,#16827e 100%);
-  border:1px solid rgba(255,255,255,.18);
-  box-shadow:0 18px 44px rgba(20,43,69,.15);
+.business-shell>.admin-side .side-link:hover,.admin-shell>.admin-side .side-link:hover,
+.business-shell>.admin-side .side-link.selected,.admin-shell>.admin-side .side-link.selected{
+  background:#d7f36b;color:#193c2d;font-weight:850;box-shadow:none;
 }
-.business-shell .welcome-band .eyebrow.light{color:#e5c47e}
-.business-shell .welcome-mark{color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.16)}
-.business-shell .button{background:#142b45;border-color:#142b45;border-radius:10px}
-.business-shell .button:hover{background:#16827e;border-color:#16827e}
-.business-shell .button.gold{background:#d9a441;border-color:#d9a441;color:#142b45}
-.business-shell .button.alt{background:#fff;color:#142b45;border-color:#dce6ef}
-.business-shell .metric,
-.business-shell .content-card,
-.business-shell .plan-card,
-.business-shell .panel,
-.business-shell .card{
-  border-color:#dce6ef;
-  box-shadow:0 10px 28px rgba(20,43,69,.045);
-  border-radius:15px;
+.business-shell>.admin-side .side-link span,.admin-shell>.admin-side .side-link span{color:inherit;width:17px;text-align:center}
+.business-shell>.admin-side .side-bottom,.admin-shell>.admin-side .side-bottom{
+  margin-top:auto;padding:16px 9px 2px;border-top:1px solid rgba(255,255,255,.12);
+  color:#eff6ee;display:flex;align-items:center;gap:9px;
 }
-.business-shell .metric strong,
-.business-shell .content-card h3,
-.business-shell .card-heading h3{color:#142b45}
-.business-shell th{background:#edf3f7;color:#647b8e}
-.business-shell th,.business-shell td{border-bottom-color:#e3ebf1}
-.business-shell td{color:#42586b}
-.business-shell td b{color:#142b45}
-.business-shell .text-button{color:#087d79}
-.business-shell .pill.green{background:#e1f3f0;color:#087d79}
-.business-shell .admin-footer{color:#71859a;border-color:#dce6ef}
-.business-shell input,
-.business-shell select,
-.business-shell textarea{
-  border-color:#d6e1e9;
-  border-radius:9px;
+.business-shell>.admin-side .side-bottom small,.admin-shell>.admin-side .side-bottom small{color:#9bb8a4}
+.business-shell>.admin-side .avatar,.admin-shell>.admin-side .avatar{
+  background:rgba(255,255,255,.14);color:#fff;border-radius:10px;
 }
-.business-shell .category-picker,
-.business-shell .setup-preview{
-  border-color:#d6e1e9;
-  background:#f7fafc;
-  border-radius:13px;
+.business-shell>.admin-side .text-button,.admin-shell>.admin-side .text-button{color:#d7f36b}
+.business-shell>.admin-main,.admin-shell>.admin-main{
+  min-width:0;width:100%;max-width:none;background:#f6f9f6;color:#17221d;
+  padding:26px clamp(18px,3vw,44px) 38px;
 }
-.business-shell .table-wrap{border-color:#dce6ef;border-radius:13px}
-.business-shell .notice{border-radius:10px}
-@media(max-width:900px){
-  .business-shell{grid-template-columns:220px minmax(0,1fr)}
+.business-shell .admin-top,.admin-shell .admin-top{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  border:0;border-bottom:1px solid #e1e9e2;padding:0 0 18px;margin:0 0 24px;
 }
+.business-shell .admin-top h1,.admin-shell .admin-top h1{color:#17221d;font-size:clamp(24px,3vw,32px);letter-spacing:-1.2px}
+.business-shell .eyebrow,.admin-shell .eyebrow{color:#62816b;font-weight:900;letter-spacing:1.2px}
+.business-shell .welcome-band,.admin-shell .welcome-band{
+  background:linear-gradient(125deg,#173c2d 0%,#20563e 68%,#32724d 100%);
+  border:1px solid rgba(255,255,255,.13);border-radius:18px;
+  box-shadow:0 16px 36px rgba(23,60,45,.12);
+}
+.business-shell .welcome-band .eyebrow.light,.admin-shell .welcome-band .eyebrow.light{color:#d7f36b}
+.business-shell .welcome-band h2,.admin-shell .welcome-band h2{color:#fff}
+.business-shell .welcome-band p,.admin-shell .welcome-band p{color:#d2e2d5}
+.business-shell .welcome-mark,.admin-shell .welcome-mark{color:rgba(215,243,107,.22);border-color:rgba(215,243,107,.2)}
+.business-shell .metric,.business-shell .content-card,.business-shell .panel,.business-shell .plan-card,
+.admin-shell .metric,.admin-shell .content-card,.admin-shell .panel,.admin-shell .plan-card{
+  background:#fff;border:1px solid #e1e9e2;border-radius:16px;
+  box-shadow:0 8px 24px rgba(28,65,42,.045);
+}
+.business-shell .metric strong,.business-shell .content-card h3,.business-shell .card-heading h3,
+.admin-shell .metric strong,.admin-shell .content-card h3,.admin-shell .card-heading h3{color:#203328}
+.business-shell .button,.admin-shell .button{
+  background:#174b39;border:1px solid #174b39;border-radius:11px;color:#fff;
+  font-weight:800;box-shadow:none;
+}
+.business-shell .button:hover,.admin-shell .button:hover{background:#236147;border-color:#236147}
+.business-shell .button.gold,.admin-shell .button.gold{background:#d7f36b;border-color:#d7f36b;color:#193c2d}
+.business-shell .button.alt,.admin-shell .button.alt{background:#fff;color:#2c5239;border-color:#dce6dc}
+.business-shell .text-button,.admin-shell .text-button{color:#236147}
+.business-shell .pill.green,.admin-shell .pill.green{background:#edf6e8;color:#46763f;border-color:#dcebd5}
+.business-shell input,.business-shell select,.business-shell textarea,
+.admin-shell input,.admin-shell select,.admin-shell textarea{
+  border:1px solid #dfe7df;border-radius:10px;background:#fcfdfc;color:#24382a;
+}
+.business-shell .table-wrap,.admin-shell .table-wrap{border:1px solid #e1e9e2;border-radius:13px;overflow:auto}
+.business-shell th,.admin-shell th{background:#f5f8f4;color:#879389;border-bottom-color:#e8eee8}
+.business-shell td,.admin-shell td{border-bottom-color:#f0f3ef;color:#445548}
+.business-shell td b,.admin-shell td b{color:#25392b}
+.business-shell .admin-footer,.admin-shell .admin-footer{color:#879389;border-color:#e1e9e2}
+.business-shell .category-picker,.business-shell .setup-preview,
+.admin-shell .category-picker,.admin-shell .setup-preview{background:#fbfdfb;border-color:#e1e9e2;border-radius:13px}
+.owner-business-card{border:1px solid #e1e9e2;border-radius:16px;box-shadow:0 8px 24px rgba(28,65,42,.045)}
+.owner-business-icon{background:#174b39;color:#d7f36b}
+@media(max-width:900px){.business-shell,.admin-shell{grid-template-columns:220px minmax(0,1fr)}}
 @media(max-width:760px){
-  .business-shell{display:block;min-height:100vh}
-  .business-shell>.admin-side{
-    position:sticky;
-    top:0;
-    z-index:30;
-    height:auto;
-    min-height:0;
-    padding:13px 12px;
-    display:flex;
-    flex-direction:row;
-    align-items:center;
-    gap:8px;
-    overflow-x:auto;
-    box-shadow:0 8px 22px rgba(20,43,69,.12);
-  }
-  .business-shell>.admin-side .logo{white-space:nowrap;margin-right:8px}
-  .business-shell>.admin-side .side-label,
-  .business-shell>.admin-side .side-bottom{display:none}
-  .business-shell>.admin-side .side-link{white-space:nowrap;flex:0 0 auto;padding:10px}
-  .business-shell>.admin-side .side-link span{width:auto}
-  .business-shell>.admin-main{padding:20px 14px 28px}
-  .business-shell .admin-top{align-items:flex-start;flex-wrap:wrap}
-  .business-shell .welcome-band{padding:24px 20px;min-height:190px}
-  .business-shell .welcome-mark{width:90px;height:90px;font-size:54px}
-  .business-shell .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .business-shell .content-card{padding:15px}
-  .business-shell .admin-form{grid-template-columns:1fr}
-  .business-shell .table-wrap{overflow-x:auto}
+ .business-shell,.admin-shell{display:block;min-height:100vh}
+ .business-shell>.admin-side,.admin-shell>.admin-side{
+  position:sticky;top:0;z-index:30;height:auto;min-height:0;padding:12px;
+  flex-direction:row;align-items:center;gap:8px;overflow-x:auto;box-shadow:0 8px 22px rgba(23,60,45,.12)
+ }
+ .business-shell>.admin-side .logo,.admin-shell>.admin-side .logo{white-space:nowrap;margin-right:8px;padding:4px 8px;border:0}
+ .business-shell>.admin-side .side-label,.business-shell>.admin-side .side-bottom,
+ .admin-shell>.admin-side .side-label,.admin-shell>.admin-side .side-bottom{display:none}
+ .business-shell>.admin-side .side-link,.admin-shell>.admin-side .side-link{white-space:nowrap;flex:0 0 auto;padding:10px}
+ .business-shell>.admin-main,.admin-shell>.admin-main{padding:20px 14px 28px}
+ .business-shell .admin-top,.admin-shell .admin-top{align-items:flex-start;flex-wrap:wrap}
+ .business-shell .metric-grid,.admin-shell .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .business-shell .admin-form,.admin-shell .admin-form{grid-template-columns:1fr}
+ .business-shell .content-card,.admin-shell .content-card{padding:15px}
+ .business-shell .table-wrap,.admin-shell .table-wrap{overflow-x:auto}
 }
-
 .bp-auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
 .bp-auth-secondary{display:flex;align-items:center;justify-content:center;min-height:48px;padding:12px 16px;border:1px solid #dce6ef;border-radius:11px;background:#fff;color:#142b45;font-size:13px;font-weight:800}
 .bp-auth-secondary:hover{border-color:#16827e;color:#087d79}

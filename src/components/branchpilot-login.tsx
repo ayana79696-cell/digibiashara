@@ -14,8 +14,25 @@ export default function DigiBiasharaLogin({ accountType }: { accountType: Accoun
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [resetBusy, setResetBusy] = useState(false);
   const router = useRouter();
   const owner = accountType === 'owner';
+
+  async function requestPasswordSetup() {
+    const db = supabase();
+    const address = email.trim().toLowerCase();
+    if (!db) { setMessage('Secure password recovery is not configured. Contact your administrator.'); return; }
+    if (!address) { setMessage('Enter your email address first, then request a secure setup link.'); return; }
+    setResetBusy(true);
+    setMessage('');
+    const { error } = await db.auth.resetPasswordForEmail(address, {
+      redirectTo: new URL('/reset-password', window.location.origin).toString(),
+    });
+    setMessage(error
+      ? 'Password setup link could not be sent: ' + error.message
+      : 'If this email has an account, a BranchPilot password setup link has been sent. Check your inbox and spam folder.');
+    setResetBusy(false);
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -92,6 +109,9 @@ export default function DigiBiasharaLogin({ accountType }: { accountType: Accoun
         {message && <p className="bp-auth-message" role="alert">{message}</p>}
         <button className="bp-auth-submit" type="submit" disabled={busy}>{busy ? 'Verifying secure access…' : owner ? 'Enter owner workspace →' : 'Enter employee workspace →'}</button>
       </form>
+      <button type="button" className="bp-auth-switch bp-auth-reset-link" onClick={requestPasswordSetup} disabled={resetBusy}>
+        {resetBusy ? 'Sending secure link…' : 'Forgot password or need a new setup link?'}
+      </button>
       {owner
         ? <Link className="bp-auth-switch" href="/owner/register">New to DigiBiashara? Register an owner account →</Link>
         : <Link className="bp-auth-switch" href="/owner/login">Are you the business owner? Owner login →</Link>}

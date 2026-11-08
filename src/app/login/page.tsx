@@ -35,5 +35,21 @@ export default function Login(){
   setMessage('This sign-in is reserved for DigiBiashara platform administrators. Use Owner login or Employee login on the BranchPilot home page for your business workspace.');
   setBusy(false);return
  }
- return <main className="wrap"><nav className="nav"><Link className="logo" href="/">DigiBiashara<span className="logo-dot">.</span></Link><Link href="/" className="muted">Back to home</Link></nav><section className="panel form"><div className="login-brand"><img src="/digibiashara-logo.svg" alt="DigiBiashara — Grow Your Business" /></div><div className="eyebrow">SECURE WORKSPACE</div><h1>{mode==='login'?'Welcome back':'Set up your password'}</h1><p className="muted">{mode==='login'?'Sign in to your business workspace. New business owners can create their password using the secure email link.':'Enter the email your platform administrator registered. We’ll send a secure link to create or reset your password.'}</p><form onSubmit={submit}><label htmlFor="email">Email address</label><input id="email" type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/>{mode==='login'&&<><label htmlFor="password">Password</label><input id="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></>}{message&&<p className="notice" role="alert">{message}</p>}<button className="button" disabled={busy}>{busy?'Please wait…':mode==='login'?'Sign in securely':'Send password setup link'}</button></form><p className="muted"><button type="button" className="text-button" onClick={()=>{setMode(mode==='login'?'reset':'login');setMessage('')}}>{mode==='login'?'First time here? Set up / reset password':'Back to sign in'}</button></p><p className="muted tiny">For security, password setup requires access to the registered email inbox. Business access also requires an active membership and subscription.</p></section></main>
+ return <main className="bp-auth-page">
+  <section className="bp-auth-card">
+   <Link href="/" className="bp-auth-back">← Back to DigiBiashara</Link>
+   <div className="bp-auth-brand"><img src="/digibiashara-logo.svg" alt="DigiBiashara"/><span><strong>DigiBiashara</strong><small>PLATFORM ADMINISTRATOR</small></span></div>
+   <span className="bp-auth-icon">⌁</span>
+   <h1>{mode==='login'?'Platform access.':'Secure password setup.'}</h1>
+   <p>{mode==='login'?'This sign-in is reserved for authorised DigiBiashara platform administrators. Business owners and employees should use their dedicated BranchPilot login.':'Enter your registered administrator email. We will send a secure password setup link if the account exists.'}</p>
+   <form onSubmit={submit}>
+    <label htmlFor="email">Email address</label><input id="email" type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/>
+    {mode==='login'&&<><label htmlFor="password">Password</label><input id="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></>}
+    {message&&<p className="bp-auth-message" role="alert">{message}</p>}
+    <button className="bp-auth-submit" disabled={busy}>{busy?'Please wait…':mode==='login'?'Enter administrator console →':'Send password setup link →'}</button>
+   </form>
+   <button type="button" className="bp-auth-switch" onClick={()=>{setMode(mode==='login'?'reset':'login');setMessage('')}}>{mode==='login'?'First time here? Set up / reset password':'Back to sign in'}</button>
+   <p className="bp-auth-hint">For security, administrator access is checked against the platform administrator role. Business access requires an active membership and subscription.</p>
+  </section>
+ </main>
 }

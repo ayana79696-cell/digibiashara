@@ -44,12 +44,8 @@ export default function AdminPage(){
     phone:phone.trim()||null,email:businessEmail.trim()||null,status:'pending',created_by:user.user.id
   }).select('id').single();
   if(e1||!b){setError(e1?.message||'Business could not be created.');setSaving(false);return;}
-  const {data:starterExamplesAdded,error:starterSeedError}=await db.rpc('branchpilot_apply_category_template',{p_business_id:b.id});
-  if(starterSeedError){
-    const {error:cleanupError}=await db.from('businesses').delete().eq('id',b.id);
-    setError('The business category was selected, but its starter catalogue could not be applied: '+starterSeedError.message+(cleanupError?' The pending business record may need administrator review.':' The incomplete registration was rolled back.'));
-    setSaving(false);await refresh();return;
-  }
+  // The database insert trigger creates the category starter catalogue atomically.
+  const starterExamplesAdded=Array.isArray(configuration.product_examples)?configuration.product_examples.length:0;
   const {error:e2}=await db.from('business_subscriptions').insert({
     business_id:b.id,monthly_fee:Number(fee)||0,status:'pending',due_date:due||null,updated_by:user.user.id
   });

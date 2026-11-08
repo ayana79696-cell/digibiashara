@@ -63,25 +63,29 @@ Deno.serve(async (req) => {
       if (error || !data.user) return json({ error: error?.message || "Staff login could not be created." }, 400);
       worker = data.user;
     } else {
-      // Send invited staff to the BranchPilot password-setup screen on the same app host.
-      // APP_URL can pin this to the canonical production URL; otherwise use the requesting app origin.
-      const configuredAppUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "";
-      let redirectTo: string | undefined;
-      try {
-        const appUrl = new URL(configuredAppUrl);
-        const isAllowedAppHost =
-          appUrl.hostname === "digibiashara-tau.vercel.app" ||
-          (appUrl.hostname.startsWith("digibiashara-") && appUrl.hostname.endsWith(".vercel.app")) ||
-          appUrl.hostname === "localhost";
-        if (isAllowedAppHost && (appUrl.protocol === "https:" || appUrl.hostname === "localhost")) {
-          redirectTo = new URL("/reset-password", appUrl.origin).toString();
+      // Invite links always land on BranchPilot's password-setup page.
+      const candidates = [req.headers.get("origin") || "", Deno.env.get("APP_URL") || "", "https://digibiashara-tau.vercel.app"];
+      let redirectTo = "https://digibiashara-tau.vercel.app/reset-password";
+      for (const candidate of candidates) {
+        try {
+          const appUrl = new URL(candidate);
+          const host = appUrl.hostname.toLowerCase();
+          const allowedHost =
+            host === "digibiashara-tau.vercel.app" ||
+            (host.startsWith("digibiashara-") && host.endsWith(".vercel.app")) ||
+            host === "localhost" ||
+            host === "127.0.0.1";
+          if (allowedHost && (appUrl.protocol === "https:" || host === "localhost" || host === "127.0.0.1")) {
+            redirectTo = new URL("/reset-password", appUrl.origin).toString();
+            break;
+          }
+        } catch {
+          // Try the next trusted BranchPilot host.
         }
-      } catch {
-        redirectTo = undefined;
       }
       const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id },
-        ...(redirectTo ? { redirectTo } : {}),
+        data: { full_name: fullName, business_id: ownerMembership.business_id, invited_by: auth.user.id, account_type: "business_employee" },
+        redirectTo,
       });
       if (error || !data.user) return json({ error: error?.message || "Invitation could not be sent." }, 400);
       worker = data.user;

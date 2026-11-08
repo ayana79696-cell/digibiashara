@@ -19,7 +19,7 @@ export default function BranchPilotAdminSection(){
  const [branches,setBranches]=useState<any[]>([]),[products,setProducts]=useState<any[]>([]),[inventory,setInventory]=useState<any[]>([]),[employees,setEmployees]=useState<any[]>([]),[sales,setSales]=useState<any[]>([]),[mpesa,setMpesa]=useState<any[]>([]),[attendance,setAttendance]=useState<any[]>([]),[expenses,setExpenses]=useState<any[]>([]),[logs,setLogs]=useState<any[]>([]),[notifications,setNotifications]=useState<any[]>([]),[saleItems,setSaleItems]=useState<any[]>([]),[stockMovements,setStockMovements]=useState<any[]>([]),[transfers,setTransfers]=useState<any[]>([]);
  const [busy,setBusy]=useState(false);
  const [branchName,setBranchName]=useState(''),[branchAddress,setBranchAddress]=useState(''),[branchPhone,setBranchPhone]=useState(''),[openingTime,setOpeningTime]=useState('08:00'),[closingTime,setClosingTime]=useState('18:00'),[latitude,setLatitude]=useState(''),[longitude,setLongitude]=useState(''),[radius,setRadius]=useState('150'),[editingBranch,setEditingBranch]=useState<string|null>(null);
- const [productName,setProductName]=useState(''),[sku,setSku]=useState(''),[barcode,setBarcode]=useState(''),[category,setCategory]=useState(''),[cost,setCost]=useState('0'),[price,setPrice]=useState('0'),[minStock,setMinStock]=useState('5'),[size,setSize]=useState(''),[color,setColor]=useState(''),[openingStock,setOpeningStock]=useState('0'),[productBranch,setProductBranch]=useState(''),[productImageUrl,setProductImageUrl]=useState(''),[editingProduct,setEditingProduct]=useState<string|null>(null);
+ const [productName,setProductName]=useState(''),[sku,setSku]=useState(''),[barcode,setBarcode]=useState(''),[category,setCategory]=useState(''),[productUnit,setProductUnit]=useState('piece'),[cost,setCost]=useState('0'),[price,setPrice]=useState('0'),[minStock,setMinStock]=useState('5'),[size,setSize]=useState(''),[color,setColor]=useState(''),[openingStock,setOpeningStock]=useState('0'),[productBranch,setProductBranch]=useState(''),[productImageUrl,setProductImageUrl]=useState(''),[editingProduct,setEditingProduct]=useState<string|null>(null);
  const [branchFilter,setBranchFilter]=useState('all'),[employeeFilter,setEmployeeFilter]=useState('all'),[search,setSearch]=useState(''),[dateFrom,setDateFrom]=useState(today()),[dateTo,setDateTo]=useState(today());
  const [stockBranch,setStockBranch]=useState(''),[stockProduct,setStockProduct]=useState(''),[stockChange,setStockChange]=useState(''),[stockReason,setStockReason]=useState('');
  const [transferFrom,setTransferFrom]=useState(''),[transferTo,setTransferTo]=useState(''),[transferProduct,setTransferProduct]=useState(''),[transferQty,setTransferQty]=useState('1'),[transferNotes,setTransferNotes]=useState('');
@@ -57,7 +57,7 @@ export default function BranchPilotAdminSection(){
    const selected=localStorage.getItem('digibiashara_active_business_id');if(selected)q=q.eq('business_id',selected);
    const {data:m,error:me}=await q.limit(1).maybeSingle();
    if(me||!m){setError('Only an Owner account can open this management page.');setReady(true);return;}
-   const {data:b,error:be}=await d.from('businesses').select('id,name,status,phone,address,logo_url,receipt_footer,receipt_prefix').eq('id',m.business_id).maybeSingle();
+   const {data:b,error:be}=await d.from('businesses').select('id,name,status,phone,address,logo_url,receipt_footer,receipt_prefix,business_type,business_activities,enabled_modules,setup_templates,business_category_template_id,business_template_snapshot').eq('id',m.business_id).maybeSingle();
    if(be||!b){setError('Could not load the business profile.');setReady(true);return;}
    setBiz(b);setBusinessName(b.name||'');setBusinessPhone(b.phone||'');setBusinessAddress(b.address||'');setBusinessLogo(b.logo_url||'');setReceiptFooter(b.receipt_footer||'Thank you for shopping with us.');setReceiptPrefix(b.receipt_prefix||'BP');
    const {data:profile}=await d.from('profiles').select('full_name,phone').eq('user_id',data.user.id).maybeSingle();
@@ -84,12 +84,12 @@ export default function BranchPilotAdminSection(){
 
  async function saveProduct(e:FormEvent){e.preventDefault();if(!db||!biz||!user)return;setBusy(true);setError('');setNotice('');
   if(editingProduct){
-    const {error:ue}=await db.from('products').update({name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:'piece',updated_at:new Date().toISOString()}).eq('id',editingProduct).eq('business_id',biz.id);
+    const {error:ue}=await db.from('products').update({name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:productUnit,updated_at:new Date().toISOString()}).eq('id',editingProduct).eq('business_id',biz.id);
     if(ue){fail(ue.message);setBusy(false);return;}
     notify('Product details updated. Existing branch stock and historical sales were left unchanged.');
-    setEditingProduct(null);setProductName('');setSku('');setBarcode('');setCategory('');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');setProductImageUrl('');setBusy(false);await refresh();return;
+    setEditingProduct(null);setProductName('');setSku('');setBarcode('');setCategory('');setProductUnit('piece');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');setProductImageUrl('');setBusy(false);await refresh();return;
   }
-  const payload:any={business_id:biz.id,name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:'piece',is_active:true,quantity:0};
+  const payload:any={business_id:biz.id,name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:productUnit,is_active:true,quantity:0};
   const {data:p,error:pe}=await db.from('products').insert(payload).select('id').single();if(pe||!p){fail(pe?.message||'Product could not be created.');setBusy(false);return;}
   const targets=productBranch&&productBranch!=='all'?branches.filter((b:any)=>b.id===productBranch):branches;
   if(targets.length){const targetRows=targets.map((b:any)=>({business_id:biz.id,branch_id:b.id,product_id:p.id,opening_stock:b.id===(productBranch||targets[0]?.id)?Number(openingStock)||0:0,quantity:b.id===(productBranch||targets[0]?.id)?Number(openingStock)||0:0}));
@@ -99,9 +99,9 @@ export default function BranchPilotAdminSection(){
     await db.from('products').update({quantity:targetRows.reduce((sum:number,r:any)=>sum+r.quantity,0)}).eq('id',p.id).eq('business_id',biz.id);
   } else if(Number(openingStock)>0){await db.from('products').update({quantity:Number(openingStock)}).eq('id',p.id).eq('business_id',biz.id);}
   notify('Product created. Stock is stored separately by branch; no sample stock was invented.');
-  setProductName('');setSku('');setBarcode('');setCategory('');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');setOpeningStock('0');setProductImageUrl('');setBusy(false);await refresh();
+  setProductName('');setSku('');setBarcode('');setCategory('');setProductUnit('piece');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');setOpeningStock('0');setProductImageUrl('');setBusy(false);await refresh();
  }
- function editProduct(p:any){setEditingProduct(p.id);setProductName(p.name||'');setSku(p.sku||'');setBarcode(p.barcode||'');setCategory(p.category||'');setCost(String(p.cost_price??0));setPrice(String(p.selling_price??0));setMinStock(String(p.low_stock_threshold??5));setSize(p.size||'');setColor(p.color||'');setProductImageUrl(p.image_url||'');window.scrollTo({top:0,behavior:'smooth'});}
+ function editProduct(p:any){setEditingProduct(p.id);setProductName(p.name||'');setSku(p.sku||'');setBarcode(p.barcode||'');setCategory(p.category||'');setProductUnit(p.unit||'piece');setCost(String(p.cost_price??0));setPrice(String(p.selling_price??0));setMinStock(String(p.low_stock_threshold??5));setSize(p.size||'');setColor(p.color||'');setProductImageUrl(p.image_url||'');window.scrollTo({top:0,behavior:'smooth'});}
  async function archiveProduct(p:any){if(!db||!biz)return;if(!window.confirm('Archive '+p.name+'? Historical sales will remain available.'))return;const {error:e}=await db.from('products').update({is_active:false,archived_at:new Date().toISOString()}).eq('id',p.id).eq('business_id',biz.id);if(e)fail(e.message);else{notify('Product archived. Historical sales and movements have been retained.');await refresh();}}
 
  async function adjustStock(e:FormEvent){e.preventDefault();if(!db||!stockBranch||!stockProduct)return;setBusy(true);setError('');setNotice('');const {error:e1}=await db.rpc('branchpilot_adjust_stock',{p_branch_id:stockBranch,p_product_id:stockProduct,p_quantity_change:Number(stockChange),p_reason:stockReason.trim()});if(e1)fail(e1.message);else{notify('Stock adjustment saved and included in the stock movement/audit trail.');setStockChange('');setStockReason('');await refresh();}setBusy(false);}
@@ -132,6 +132,12 @@ export default function BranchPilotAdminSection(){
  function exportCsv(name:string,rows:any[]){if(!rows.length){fail('There are no rows to export for the selected filters.');return;}const cols=Object.keys(rows[0]);const val=(v:any)=>{const s=String(v??'');return '"'+s.replaceAll('"','""')+'"';};const csv=[cols.map(val).join(','),...rows.map(r=>cols.map(c=>val(r[c])).join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=name+'.csv';a.click();URL.revokeObjectURL(url);}
  const printReport=()=>window.print();
  const selectedInventory=stockBranch?inventory.filter((r:any)=>r.branch_id===stockBranch):inventory;
+ const categoryConfiguration=biz?.business_template_snapshot?.configuration||{};
+ const templateProductExamples:Array<{name:string;category?:string;unit?:string;kind?:string}> = Array.isArray(categoryConfiguration.product_examples)?categoryConfiguration.product_examples:[];
+ const templateUnits:string[] = Array.isArray(categoryConfiguration.units)?categoryConfiguration.units.filter((x:any)=>typeof x==='string'):[];
+ const templateCategories:string[] = [...new Set(templateProductExamples.map((x:any)=>String(x.category||'').trim()).filter(Boolean))];
+ const templateFeatures:string[] = Array.isArray(categoryConfiguration.features)?categoryConfiguration.features:[];
+
  const missingCheckoutRows=attendance.filter((a:any)=>{
    if(a.check_out_at)return false;
    const branch=branches.find((b:any)=>b.id===a.branch_id);
@@ -167,25 +173,37 @@ export default function BranchPilotAdminSection(){
   </section>
  </div>}
 
- {section==='products'&&<div className="bp-grid bp-two-col">
-  <section className="bp-panel"><div className="bp-panel-heading"><div><h2>{editingProduct?'Edit product':'Add product'}</h2><p>Prices and minimums are stored once; quantities are controlled separately for each branch.</p></div></div>
-   <form className="bp-form-grid" onSubmit={saveProduct}>
-    <label>Product name<input required value={productName} onChange={e=>setProductName(e.target.value)} placeholder="e.g. Classic trousers"/></label>
-    <label>Category<input value={category} onChange={e=>setCategory(e.target.value)} placeholder="Clothing, shoes…"/></label>
-    <label>SKU / product code<input value={sku} onChange={e=>setSku(e.target.value)}/></label><label>Barcode<input value={barcode} onChange={e=>setBarcode(e.target.value)}/></label>
-    <label>Size<input value={size} onChange={e=>setSize(e.target.value)} placeholder="S, M, 32…"/></label><label>Color<input value={color} onChange={e=>setColor(e.target.value)} placeholder="Black, navy…"/></label>
-    <label style={{gridColumn:'1/-1'}}>Product image URL<input type="url" value={productImageUrl} onChange={e=>setProductImageUrl(e.target.value)} placeholder="https://… (optional)"/></label>
-    <label>Buying price (KES)<input type="number" min="0" step="0.01" required value={cost} onChange={e=>setCost(e.target.value)}/></label>
-    <label>Selling price (KES)<input type="number" min="0" step="0.01" required value={price} onChange={e=>setPrice(e.target.value)}/></label>
-    <label>Low-stock threshold<input type="number" min="0" step="0.001" required value={minStock} onChange={e=>setMinStock(e.target.value)}/></label>
-    {!editingProduct&&<><label>Opening stock branch<select value={productBranch} onChange={e=>setProductBranch(e.target.value)}><option value="">First branch (default)</option>{branches.filter((b:any)=>b.is_active).map((b:any)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
-    <label>Opening stock quantity<input type="number" min="0" step="0.001" required value={openingStock} onChange={e=>setOpeningStock(e.target.value)}/></label></>}
-    <div style={{gridColumn:'1/-1',display:'flex',gap:8,flexWrap:'wrap'}}><button className="bp-button" disabled={busy}>{busy?'Saving…':editingProduct?'Save product changes':'Save product'}</button>{editingProduct&&<button type="button" className="bp-button secondary" onClick={()=>{setEditingProduct(null);setProductName('');setSku('');setBarcode('');setCategory('');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');}}>Cancel edit</button>}</div>
-   </form>
+ {section==='products'&&<div className="bp-grid">
+  <section className="bp-panel bp-category-product-panel">
+   <div className="bp-panel-heading"><div><span className="bp-register-kicker">CATEGORY-AWARE CATALOGUE</span><h2>{biz.business_type||'Business'} product & service setup</h2><p>Suggestions and supported units come from the category template saved during registration.</p></div><span className="bp-pill">{templateProductExamples.length} examples</span></div>
+   {categoryConfiguration.category_label&&<p className="bp-template-category-line">Active template: <strong>{categoryConfiguration.category_label}</strong> · {categoryConfiguration.group_label||biz.business_type}</p>}
+   {templateProductExamples.length>0
+    ? <div className="bp-grid bp-category-example-grid">{templateProductExamples.map((item:any,index:number)=><button key={item.name+'-'+index} type="button" className="bp-category-example" onClick={()=>{setEditingProduct(null);setProductName(item.name||'');setCategory(item.category||'');setProductUnit(item.unit||'piece');setCost('0');setPrice('0');setOpeningStock('0');setProductBranch('');}}><span>{String(item.kind||'product').toUpperCase()}</span><strong>{item.name}</strong><small>{item.category||'General'} · {item.unit||'piece'}</small><b>Use as a starting point →</b></button>)}</div>
+    : <div className="bp-empty">This category template has no starter examples saved yet. Add your actual products or services below; the system will not invent prices or stock.</div>}
+   {templateUnits.length>0&&<div className="bp-template-feature-row"><b>Allowed / suggested units</b>{templateUnits.map((unit:string)=><span key={unit}>{unit}</span>)}</div>}
+   {templateFeatures.length>0&&<div className="bp-template-note"><strong>Template guidance:</strong> {templateFeatures.join(' · ')}. These are category setup notes; they do not automatically enable specialist features that are not yet implemented.</div>}
   </section>
-  <section className="bp-panel"><div className="bp-panel-heading"><div><h2>Product catalogue</h2><p>{products.length} active products</p></div><button className="bp-button secondary" onClick={()=>exportCsv('branchpilot-products',products.map((p:any)=>({name:p.name,sku:p.sku,barcode:p.barcode,category:p.category,buying_price:p.cost_price,selling_price:p.selling_price,minimum_stock:p.low_stock_threshold}))) }>Export CSV</button></div>
-   <div className="bp-table-wrap"><table className="bp-table"><thead><tr><th>PRODUCT</th><th>BUY / SELL</th><th>MIN STOCK</th><th></th></tr></thead><tbody>{products.map((p:any)=><tr key={p.id}><td><strong>{p.name}</strong><br/><small>{p.category||'Uncategorised'} · {[p.size,p.color].filter(Boolean).join(' / ')}</small><br/><small>{p.sku||p.barcode||'No code'}</small></td><td>{money(p.cost_price)} / {money(p.selling_price)}</td><td>{p.low_stock_threshold}</td><td style={{display:'flex',gap:6}}><button className="bp-button secondary" onClick={()=>editProduct(p)}>Edit</button><button className="bp-button secondary" onClick={()=>archiveProduct(p)}>Archive</button></td></tr>)}</tbody></table></div>
+  <div className="bp-grid bp-two-col">
+   <section className="bp-panel"><div className="bp-panel-heading"><div><h2>{editingProduct?'Edit product / service':'Add product or service'}</h2><p>Enter real prices and opening stock. Service entries use the Service unit and are not treated as stock items.</p></div></div>
+    <form className="bp-form-grid" onSubmit={saveProduct}>
+     <label>Product / service name<input required value={productName} onChange={e=>setProductName(e.target.value)} placeholder="Enter the actual item or service name"/></label>
+     <label>Product category<input list="bp-product-category-options" value={category} onChange={e=>setCategory(e.target.value)} placeholder="Choose or enter a category"/><datalist id="bp-product-category-options">{templateCategories.map((value:string)=><option key={value} value={value}/>)}</datalist></label>
+     <label>Unit / item type<select value={productUnit} onChange={e=>setProductUnit(e.target.value)}>{[...new Set([...templateUnits,'piece','service'])].map((value:string)=><option key={value} value={value}>{value==='service'?'Service':value}</option>)}</select></label>
+     {productUnit!=='service'&&<label>SKU / product code<input value={sku} onChange={e=>setSku(e.target.value)}/></label>}
+     <label>Barcode<input value={barcode} onChange={e=>setBarcode(e.target.value)}/></label>
+     <label>Size / model<input value={size} onChange={e=>setSize(e.target.value)} placeholder="Size, model or variant"/></label><label>Colour<input value={color} onChange={e=>setColor(e.target.value)} placeholder="Optional"/></label>
+     <label style={{gridColumn:'1/-1'}}>Product image URL<input type="url" value={productImageUrl} onChange={e=>setProductImageUrl(e.target.value)} placeholder="https://… (optional)"/></label>
+     <label>{productUnit==='service'?'Service cost (KES)':'Buying price (KES)'}<input type="number" min="0" step="0.01" required value={cost} onChange={e=>setCost(e.target.value)}/></label>
+     <label>{productUnit==='service'?'Service charge (KES)':'Selling price (KES)'}<input type="number" min="0" step="0.01" required value={price} onChange={e=>setPrice(e.target.value)}/></label>
+     {productUnit!=='service'&&<label>Low-stock threshold<input type="number" min="0" step="0.001" required value={minStock} onChange={e=>setMinStock(e.target.value)}/></label>}
+     {!editingProduct&&productUnit!=='service'&&<><label>Opening stock branch<select value={productBranch} onChange={e=>setProductBranch(e.target.value)}><option value="">First branch (default)</option>{branches.filter((b:any)=>b.is_active).map((b:any)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label>Opening stock quantity<input type="number" min="0" step="0.001" required value={openingStock} onChange={e=>setOpeningStock(e.target.value)}/></label></>}
+     <div style={{gridColumn:'1/-1',display:'flex',gap:8,flexWrap:'wrap'}}><button className="bp-button" disabled={busy}>{busy?'Saving…':editingProduct?'Save changes':'Save product / service'}</button>{editingProduct&&<button type="button" className="bp-button secondary" onClick={()=>{setEditingProduct(null);setProductName('');setSku('');setBarcode('');setCategory('');setProductUnit('piece');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');}}>Cancel edit</button>}</div>
+    </form>
+   </section>
+   <section className="bp-panel"><div className="bp-panel-heading"><div><h2>Product & service catalogue</h2><p>{products.length} active catalogue entries</p></div><button className="bp-button secondary" onClick={()=>exportCsv('branchpilot-products',products.map((p:any)=>({name:p.name,unit:p.unit,sku:p.sku,barcode:p.barcode,category:p.category,buying_price:p.cost_price,selling_price:p.selling_price,minimum_stock:p.low_stock_threshold}))) }>Export CSV</button></div>
+    <div className="bp-table-wrap"><table className="bp-table"><thead><tr><th>ITEM</th><th>UNIT</th><th>BUY / SELL</th><th>MIN STOCK</th><th></th></tr></thead><tbody>{products.map((p:any)=><tr key={p.id}><td><strong>{p.name}</strong><br/><small>{p.category||'Uncategorised'} · {[p.size,p.color].filter(Boolean).join(' / ')}</small><br/><small>{p.sku||p.barcode||'No code'}</small></td><td>{p.unit==='service'?'Service':p.unit}</td><td>{money(p.cost_price)} / {money(p.selling_price)}</td><td>{p.unit==='service'?'—':p.low_stock_threshold}</td><td style={{display:'flex',gap:6}}><button className="bp-button secondary" onClick={()=>editProduct(p)}>Edit</button><button className="bp-button secondary" onClick={()=>archiveProduct(p)}>Archive</button></td></tr>)}</tbody></table></div>
   </section>
+  </div>
  </div>}
 
  {section==='inventory'&&<div className="bp-grid">

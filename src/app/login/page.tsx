@@ -5,7 +5,6 @@ import {createClient} from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 
-const APP_URL='https://digibiashara-tau.vercel.app';
 function client(){
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
  if(!url||!key)return null;
@@ -23,7 +22,7 @@ export default function Login(){
   e.preventDefault();setBusy(true);setMessage('');
   const supabase=client();if(!supabase){setMessage('Sign-in is not configured. Please contact DigiBiashara support.');setBusy(false);return}
   if(mode==='reset'){
-   const {error}=await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(),{redirectTo:APP_URL+'/reset-password'});
+   const {error}=await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(),{redirectTo:new URL('/reset-password',window.location.origin).toString()});
    setMessage(error?'Password setup email could not be sent: '+error.message:'If this email has a DigiBiashara account, a secure password setup link will be sent. Check your inbox and spam folder.');
    setBusy(false);return;
   }

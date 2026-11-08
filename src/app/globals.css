@@ -816,3 +816,136 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
  .bp-business-tools input{max-width:none}
  .bp-admin-footer{flex-direction:column}
 }
+
+
+/* BranchPilot visual system for every owner/business workspace and invitation landing destination */
+.business-shell{
+  min-height:100vh;
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:0;
+  display:grid;
+  grid-template-columns:258px minmax(0,1fr);
+  background:#f3f7fb;
+  color:#142b45;
+}
+.business-shell>.admin-side{
+  position:sticky;
+  top:0;
+  height:100vh;
+  min-height:100vh;
+  background:#142b45;
+  border:0;
+  color:#fff;
+  padding:26px 18px;
+  box-shadow:8px 0 28px rgba(20,43,69,.08);
+}
+.business-shell>.admin-side .logo{color:#fff;font-weight:900;letter-spacing:-.5px}
+.business-shell>.admin-side .logo-dot{color:#d9a441}
+.business-shell>.admin-side .side-label{color:#8fb8c5}
+.business-shell>.admin-side .side-link{
+  color:#d6e3ec;
+  border-radius:11px;
+  padding:12px 13px;
+  transition:background .18s ease,color .18s ease,transform .18s ease;
+}
+.business-shell>.admin-side .side-link:hover,
+.business-shell>.admin-side .side-link.selected{
+  background:rgba(19,140,135,.24);
+  color:#fff;
+}
+.business-shell>.admin-side .side-link.selected{box-shadow:inset 3px 0 #d9a441}
+.business-shell>.admin-side .side-link span{color:#d9a441}
+.business-shell>.admin-side .side-bottom{border-color:rgba(255,255,255,.15);color:#fff}
+.business-shell>.admin-side .side-bottom small{color:#a9c1ce}
+.business-shell>.admin-side .side-bottom .avatar{background:#d9a441;color:#142b45}
+.business-shell>.admin-side .side-bottom .text-button{color:#f0ce86}
+.business-shell>.admin-main{
+  min-width:0;
+  width:100%;
+  max-width:none;
+  background:#f3f7fb;
+  padding:30px clamp(18px,3vw,44px);
+  color:#142b45;
+}
+.business-shell .admin-top{border-color:#dce6ef}
+.business-shell .admin-top h1{color:#142b45}
+.business-shell .eyebrow{color:#16827e}
+.business-shell .welcome-band{
+  background:linear-gradient(120deg,#142b45 0%,#1c5268 58%,#16827e 100%);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 18px 44px rgba(20,43,69,.15);
+}
+.business-shell .welcome-band .eyebrow.light{color:#e5c47e}
+.business-shell .welcome-mark{color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.16)}
+.business-shell .button{background:#142b45;border-color:#142b45;border-radius:10px}
+.business-shell .button:hover{background:#16827e;border-color:#16827e}
+.business-shell .button.gold{background:#d9a441;border-color:#d9a441;color:#142b45}
+.business-shell .button.alt{background:#fff;color:#142b45;border-color:#dce6ef}
+.business-shell .metric,
+.business-shell .content-card,
+.business-shell .plan-card,
+.business-shell .panel,
+.business-shell .card{
+  border-color:#dce6ef;
+  box-shadow:0 10px 28px rgba(20,43,69,.045);
+  border-radius:15px;
+}
+.business-shell .metric strong,
+.business-shell .content-card h3,
+.business-shell .card-heading h3{color:#142b45}
+.business-shell th{background:#edf3f7;color:#647b8e}
+.business-shell th,.business-shell td{border-bottom-color:#e3ebf1}
+.business-shell td{color:#42586b}
+.business-shell td b{color:#142b45}
+.business-shell .text-button{color:#087d79}
+.business-shell .pill.green{background:#e1f3f0;color:#087d79}
+.business-shell .admin-footer{color:#71859a;border-color:#dce6ef}
+.business-shell input,
+.business-shell select,
+.business-shell textarea{
+  border-color:#d6e1e9;
+  border-radius:9px;
+}
+.business-shell .category-picker,
+.business-shell .setup-preview{
+  border-color:#d6e1e9;
+  background:#f7fafc;
+  border-radius:13px;
+}
+.business-shell .table-wrap{border-color:#dce6ef;border-radius:13px}
+.business-shell .notice{border-radius:10px}
+@media(max-width:900px){
+  .business-shell{grid-template-columns:220px minmax(0,1fr)}
+}
+@media(max-width:760px){
+  .business-shell{display:block;min-height:100vh}
+  .business-shell>.admin-side{
+    position:sticky;
+    top:0;
+    z-index:30;
+    height:auto;
+    min-height:0;
+    padding:13px 12px;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    gap:8px;
+    overflow-x:auto;
+    box-shadow:0 8px 22px rgba(20,43,69,.12);
+  }
+  .business-shell>.admin-side .logo{white-space:nowrap;margin-right:8px}
+  .business-shell>.admin-side .side-label,
+  .business-shell>.admin-side .side-bottom{display:none}
+  .business-shell>.admin-side .side-link{white-space:nowrap;flex:0 0 auto;padding:10px}
+  .business-shell>.admin-side .side-link span{width:auto}
+  .business-shell>.admin-main{padding:20px 14px 28px}
+  .business-shell .admin-top{align-items:flex-start;flex-wrap:wrap}
+  .business-shell .welcome-band{padding:24px 20px;min-height:190px}
+  .business-shell .welcome-mark{width:90px;height:90px;font-size:54px}
+  .business-shell .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .business-shell .content-card{padding:15px}
+  .business-shell .admin-form{grid-template-columns:1fr}
+  .business-shell .table-wrap{overflow-x:auto}
+}

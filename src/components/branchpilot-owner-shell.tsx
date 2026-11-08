@@ -17,7 +17,7 @@ export default function BranchPilotOwnerShell({ children, title, subtitle, busin
     const u = process.env.NEXT_PUBLIC_SUPABASE_URL, k = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (u && k) await createClient(u,k).auth.signOut();
     localStorage.removeItem('digibiashara_active_business_id');
-    location.href = '/';
+    location.href = '/owner/login';
   }
   return <main className="bp-workspace">
     <button className="bp-mobile-menu" onClick={()=>setMenuOpen(v=>!v)} aria-label="Toggle navigation">{menuOpen?'✕':'☰'} <span>Menu</span></button>
@@ -28,8 +28,7 @@ export default function BranchPilotOwnerShell({ children, title, subtitle, busin
         <div className="bp-side-label">BUSINESS CONTROL</div>
         {links.slice(8).map(([label,href,icon])=><Link key={href} onClick={()=>setMenuOpen(false)} className={pathname===href?'active':''} href={href}><span>{icon}</span>{label}</Link>)}
         <div className="bp-side-label">PLATFORM FEATURES</div>
-        <Link onClick={()=>setMenuOpen(false)} href="/businesses" className={pathname==='/businesses'?'active':''}><span>▣</span>Business setup & categories</Link>
-        <Link onClick={()=>setMenuOpen(false)} href="/business" className={pathname==='/business'?'active':''}><span>⌂</span>Legacy workspace</Link>
+        <Link onClick={()=>setMenuOpen(false)} href="/businesses" className={pathname==='/businesses'?'active':''}><span>▣</span>My businesses & category setup</Link>
       </nav>
       <div className="bp-side-bottom"><span className="bp-side-avatar">{businessLogo?<img src={businessLogo} alt="Business logo" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:10}}/>:'DB'}</span><div><b>{businessName||'Your business'}</b><small>{email||'Owner account'}</small></div><button onClick={signOut}>Sign out</button></div>
     </aside>

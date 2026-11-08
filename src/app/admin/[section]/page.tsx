@@ -84,12 +84,12 @@ export default function BranchPilotAdminSection(){
 
  async function saveProduct(e:FormEvent){e.preventDefault();if(!db||!biz||!user)return;setBusy(true);setError('');setNotice('');
   if(editingProduct){
-    const {error:ue}=await db.from('products').update({name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:productUnit,updated_at:new Date().toISOString()}).eq('id',editingProduct).eq('business_id',biz.id);
+    const {error:ue}=await db.from('products').update({name:productName.trim(),sku:productUnit==='service'?null:(sku.trim()||null),barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:productUnit==='service'?0:(Number(minStock)||0),size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:productUnit,updated_at:new Date().toISOString()}).eq('id',editingProduct).eq('business_id',biz.id);
     if(ue){fail(ue.message);setBusy(false);return;}
     notify('Product details updated. Existing branch stock and historical sales were left unchanged.');
     setEditingProduct(null);setProductName('');setSku('');setBarcode('');setCategory('');setProductUnit('piece');setCost('0');setPrice('0');setMinStock('5');setSize('');setColor('');setProductImageUrl('');setBusy(false);await refresh();return;
   }
-  const payload:any={business_id:biz.id,name:productName.trim(),sku:sku.trim()||null,barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:Number(minStock)||0,size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:productUnit,is_active:true,quantity:0};
+  const payload:any={business_id:biz.id,name:productName.trim(),sku:productUnit==='service'?null:(sku.trim()||null),barcode:barcode.trim()||null,category:category.trim()||null,cost_price:Number(cost)||0,selling_price:Number(price)||0,low_stock_threshold:productUnit==='service'?0:(Number(minStock)||0),size:size.trim()||null,color:color.trim()||null,image_url:productImageUrl.trim()||null,unit:productUnit,is_active:true,quantity:0};
   const {data:p,error:pe}=await db.from('products').insert(payload).select('id').single();if(pe||!p){fail(pe?.message||'Product could not be created.');setBusy(false);return;}
   const targets=productBranch&&productBranch!=='all'?branches.filter((b:any)=>b.id===productBranch):branches;
   if(targets.length){const targetRows=targets.map((b:any)=>({business_id:biz.id,branch_id:b.id,product_id:p.id,opening_stock:b.id===(productBranch||targets[0]?.id)?Number(openingStock)||0:0,quantity:b.id===(productBranch||targets[0]?.id)?Number(openingStock)||0:0}));

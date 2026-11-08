@@ -5,7 +5,7 @@ import { ReactNode, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const links = [
-  ['Dashboard','/admin/dashboard','◫'],['Branches','/admin/branches','⌖'],['Products','/admin/products','▦'],['Inventory','/admin/inventory','▤'],['Stock transfers','/admin/transfers','↔'],['Sales & M-Pesa','/admin/sales','↗'],['Employees','/admin/employees','♙'],['Attendance','/admin/attendance','◷'],['Expenses','/admin/expenses','↘'],['Reports','/admin/reports','▧'],['Analytics','/admin/analytics','⌁'],['Notifications','/admin/notifications','♧'],['Audit log','/admin/audit-log','≡'],['Settings','/admin/settings','⚙'],
+  ['Dashboard','/admin/dashboard','◫'],['Branches','/admin/branches','⌖'],['Products','/admin/products','▦'],['Inventory','/admin/inventory','▤'],['Stock transfers','/admin/transfers','↔'],['Sales & M-Pesa','/admin/sales','↗'],['Customers','/admin/customers','♙'],['Employees','/admin/employees','♙'],['Attendance','/admin/attendance','◷'],['Expenses','/admin/expenses','↘'],['Reports','/admin/reports','▧'],['Analytics','/admin/analytics','⌁'],['Notifications','/admin/notifications','♧'],['Audit log','/admin/audit-log','≡'],['Settings','/admin/settings','⚙'],
 ];
 
 export default function BranchPilotOwnerShell({ children, title, subtitle, businessName, businessLogo, email, actions }: {
@@ -24,9 +24,9 @@ export default function BranchPilotOwnerShell({ children, title, subtitle, busin
     <aside className={`bp-sidebar ${menuOpen?'bp-sidebar-open':''}`}>
       <Link href="/" className="bp-sidebar-brand"><img src="/digibiashara-logo.svg" alt="DigiBiashara" /><span><strong>DigiBiashara</strong><small>RETAIL MANAGEMENT</small></span></Link>
       <div className="bp-side-label">OPERATIONS</div>
-      <nav className="bp-side-links">{links.slice(0,8).map(([label,href,icon])=><Link key={href} onClick={()=>setMenuOpen(false)} className={pathname===href?'active':''} href={href}><span>{icon}</span>{label}</Link>)}
+      <nav className="bp-side-links">{links.slice(0,9).map(([label,href,icon])=><Link key={href} onClick={()=>setMenuOpen(false)} className={pathname===href?'active':''} href={href}><span>{icon}</span>{label}</Link>)}
         <div className="bp-side-label">BUSINESS CONTROL</div>
-        {links.slice(8).map(([label,href,icon])=><Link key={href} onClick={()=>setMenuOpen(false)} className={pathname===href?'active':''} href={href}><span>{icon}</span>{label}</Link>)}
+        {links.slice(9).map(([label,href,icon])=><Link key={href} onClick={()=>setMenuOpen(false)} className={pathname===href?'active':''} href={href}><span>{icon}</span>{label}</Link>)}
         <div className="bp-side-label">PLATFORM FEATURES</div>
         <Link onClick={()=>setMenuOpen(false)} href="/businesses" className={pathname==='/businesses'?'active':''}><span>▣</span>My businesses & category setup</Link>
       </nav>

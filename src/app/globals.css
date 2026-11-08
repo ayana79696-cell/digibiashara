@@ -705,3 +705,25 @@ input:focus,select:focus{border-color:#d89d00;outline:3px solid #f2b70540}
   .welcome-band { background: #fff !important; color: #111827 !important; border: 1px solid #d1d5db !important; }
   .welcome-band * { color: #111827 !important; }
 }
+
+
+/* BranchPilot master-template workspace */
+.bp-template-admin{background:#f3f7fb;color:#142b45;grid-template-columns:250px minmax(0,1fr)}
+.bp-template-admin .admin-side{background:#142b45;border-right:0;color:#fff}
+.bp-template-admin .admin-side .logo{color:#fff}
+.bp-template-admin .side-label{color:#9fb2c8}
+.bp-template-admin .side-link{color:#d9e5f2}
+.bp-template-admin .side-link:hover,.bp-template-admin .side-link.selected{background:#234665;color:#fff}
+.bp-template-admin .side-bottom{border-color:#36516c;color:#fff}
+.bp-template-admin .side-bottom small{color:#b7c8d8}
+.bp-template-admin .admin-main{background:#f3f7fb}
+.bp-template-admin .admin-top h1{color:#142b45}
+.bp-template-admin .eyebrow{color:#b47a00}
+.bp-template-admin .content-card,.bp-template-admin .metric,.bp-template-admin .template-editor{border-color:#dce6ef;box-shadow:0 12px 32px rgba(20,43,69,.06)}
+.bp-template-admin .button{background:#142b45}
+.bp-template-admin .button:hover{background:#234665}
+.bp-template-admin .button.alt{background:#fff;color:#142b45;border-color:#dce6ef}
+.bp-template-admin .template-choice.selected{background:#e9f1f8;border-color:#142b45;color:#142b45}
+.bp-template-admin .pill.green{background:#eaf3fa;color:#1d5c83}
+.bp-template-admin .admin-footer{color:#71859a}
+@media(max-width:760px){.bp-template-admin .admin-side{background:#142b45}}

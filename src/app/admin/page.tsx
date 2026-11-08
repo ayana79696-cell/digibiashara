@@ -4,7 +4,8 @@ import Link from 'next/link';
 import {createClient,SupabaseClient} from '@supabase/supabase-js';
 import {getBusinessSetup} from '@/lib/business-catalogue';
 type Business={id:string;name:string;business_type:string;business_activities?:string[];enabled_modules?:string[];phone:string|null;email:string|null;status:string;created_at:string};
-type Sub={id:string;business_id:string;monthly_fee:number;status:string;due_date:string|null;paid_until:string|null;businesses?:{name:string}};\ntype CategoryTemplate={id:string;group_id:string;group_label:string;category_label:string;is_active:boolean;configuration:Record<string,any>};
+type Sub={id:string;business_id:string;monthly_fee:number;status:string;due_date:string|null;paid_until:string|null;businesses?:{name:string}};
+type CategoryTemplate={id:string;group_id:string;group_label:string;category_label:string;is_active:boolean;configuration:Record<string,any>};
 function client(){const u=process.env.NEXT_PUBLIC_SUPABASE_URL,k=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return u&&k?createClient(u,k,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null}
 const money=(v:number)=>new Intl.NumberFormat('en-KE',{style:'currency',currency:'KES',maximumFractionDigits:0}).format(Number(v||0));
 export default function AdminPage(){

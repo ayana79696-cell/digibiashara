@@ -128,7 +128,7 @@ export default function BranchPilotRegister() {
       setBusy(false);
       return;
     }
-    setSuccess(data?.message || 'Your BranchPilot owner account has been created.');
+    setSuccess((data?.message || 'Your BranchPilot owner account has been created.') + (Number(data?.starter_examples_added) > 0 ? ' ' + data.starter_examples_added + ' editable starter products/services have been added to your catalogue. Set your own prices and real opening stock.' : ''));
     setBusy(false);
   }
 

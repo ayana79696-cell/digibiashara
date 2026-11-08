@@ -18,6 +18,10 @@ type CategoryTemplate = {
     planned_features?: string[];
     supported_modules?: string[];
     implementation_status?: string;
+    main_workflow?: string;
+    specialised_fields?: string[];
+    default_roles?: string[];
+    reports?: string[];
   };
 };
 
@@ -197,6 +201,10 @@ export default function BranchPilotRegister() {
                   </div>
                   {features.length > 0 && <div className="bp-template-feature-row"><b>Template guidance</b>{features.slice(0, 8).map((feature) => <span key={feature}>{feature}</span>)}</div>}
                   {plannedFeatures.length > 0 && <p className="bp-template-note">Some specialised workflows are planned in the category template and are not switched on until they are implemented and tested.</p>}
+                  {configuration.main_workflow && <div className="bp-template-feature-row"><b>Suggested workflow</b><span>{configuration.main_workflow}</span></div>}
+                  {(configuration.specialised_fields || []).length > 0 && <div className="bp-template-feature-row"><b>Category-specific fields</b>{configuration.specialised_fields!.slice(0, 12).map((field) => <span key={field}>{field}</span>)}</div>}
+                  {(configuration.default_roles || []).length > 0 && <div className="bp-template-feature-row"><b>Suggested roles</b>{configuration.default_roles!.map((role) => <span key={role}>{role}</span>)}</div>}
+                  {(configuration.reports || []).length > 0 && <div className="bp-template-feature-row"><b>Reports & indicators</b>{configuration.reports!.slice(0, 8).map((report) => <span key={report}>{report}</span>)}</div>}
                 </div>
               )}
             </section>
